@@ -4,15 +4,11 @@ exampleList = [
     "heading": "Welcome",
     "description": '''
     <p class="desc">
-Welcome to the Aircloak Training App. Use this app to understand how to make the best use of Aircloak's anonymization. Select from the topics listed on the left.
+Welcome to the Diffix for PostgreSQL Training App. Use this app to understand how to make the best use of Diffix anonymization. Select from the topics listed on the left.
     <p class="desc">
-This app accesses Aircloak through the postgres interface provided by the Aircloak system. It also accesses the raw data residing on a PostgreSQL server.
-    <p class="desc">
-For more information, see the <a target=_blank href="https://demo.aircloak.com/docs">online documentation for Aircloak.</a>
-    <p class="desc">
-Contact <b>solutions@aircloak.com</b> for access to the Aircloak SQL client.''',
+For more information, visit the <a target=_blank href="https:/open-diffix.org">Open Diffix project website</a>, or contact us at hello@open-diffix.org.''',
     "dbname": "",
-    "cloak": {
+    "diffix": {
       "sql": ""
     },
     "native": {
@@ -36,7 +32,7 @@ A series of examples are listed on the left. Each example provides SQL queries f
     In addition to the query results for both Aircloak and native queries, the app usually displays the absolute and relative error between the noisy Aircloak and correct native answers. The error is not displayed in cases where there is no matching column value between the cloak and the native output for the displayed rows.
     ''',
     "dbname": "",
-    "cloak": {
+    "diffix": {
       "sql": ""
     },
     "native": {
@@ -47,7 +43,7 @@ A series of examples are listed on the left. Each example provides SQL queries f
     "heading": "Schema exploration",
     "description": '''<p class="desc">Aircloak provides MySQL-like commands for exploring the schema.''',
     "dbname": "",
-    "cloak": {
+    "diffix": {
       "sql": ""
     },
     "native": {
@@ -66,7 +62,7 @@ personal or non-personal</a>. Non-personal tables contain no user-specific data 
 ''',
     
     "dbname": "banking",
-    "cloak": {
+    "diffix": {
       "sql": '''
 SHOW tables'''
     },
@@ -107,7 +103,7 @@ Read more
 <p class="desc">
 ''',
     "dbname": "banking",
-    "cloak": {
+    "diffix": {
       "sql": '''
 SHOW columns FROM accounts'''
     },
@@ -122,7 +118,7 @@ WHERE table_name   = 'accounts' '''
     "heading": "Basic queries",
     "description": '''<p class="desc">Listed here are a few of the most basic queries that can be executed with Aircloak.''',
     "dbname": "",
-    "cloak": {
+    "diffix": {
       "sql": ""
     },
     "native": {
@@ -133,7 +129,7 @@ WHERE table_name   = 'accounts' '''
     "heading": "Counting users",
     "description": '''<p class="desc">Count the number of distinct users with bank accounts.''',
     "dbname": "banking",
-    "cloak": {
+    "diffix": {
       "sql": '''
 SELECT count(DISTINCT client_id)
 FROM accounts'''
@@ -148,7 +144,7 @@ FROM accounts'''
     "heading": "Counting rows",
     "description": '''<p class="desc">Count the number of rides in the taxi database (one ride per row).''',
     "dbname": "taxi",
-    "cloak": {
+    "diffix": {
       "sql": '''
 SELECT count(*)
 FROM jan08'''
@@ -168,7 +164,7 @@ Count the number of different countries from which SciHub downloads took place.
 <font color="red"> Note that this query takes ten seconds or so</font>
 ''',
     "dbname": "scihub",
-    "cloak": {
+    "diffix": {
       "sql": '''
 SELECT count(DISTINCT country)
 FROM sep2015'''
@@ -183,7 +179,7 @@ FROM sep2015'''
     "heading": "Histogram",
     "description": '''<p class="desc">Count the number of customers in each CLI District.''',
     "dbname": "banking",
-    "cloak": {
+    "diffix": {
       "sql": '''
 SELECT cli_district_id AS cli,
        count(DISTINCT client_id)
@@ -209,7 +205,7 @@ Histogram of counts of individuals by number of marriages per 5-year age group.
 <font color="red">Note query takes around 1/2 minute</font>
 ''',
     "dbname": "census0",
-    "cloak": {
+    "diffix": {
       "sql": '''
 SELECT bucket(age by 5) AS age, 
        marrno AS marriages,
@@ -235,7 +231,7 @@ ORDER BY 1,2
     "description": '''<p class="desc">The total sum of all transaction amounts.
     <p class="desc">Aircloak also supports min, max, median, average, stddev, and variance. Try modifying the query for these different aggregates.''',
     "dbname": "banking",
-    "cloak": {
+    "diffix": {
       "sql": '''
 SELECT sum(amount)
 FROM transactions'''
@@ -250,7 +246,7 @@ FROM transactions'''
     "heading": "GROUP BY / nested SELECT",
     "description": '''<p class="desc">Builds a histogram of the number of users with different total transaction amounts.''',
     "dbname": "banking",
-    "cloak": {
+    "diffix": {
       "sql": '''
 SELECT bucket(sums by 20000) AS amount,
        count(*)
@@ -277,7 +273,7 @@ ORDER BY 1'''
     "heading": "JOIN",
     "description": '''<p class="desc">Builds a histogram of the number of users in each CLI District for users with an average account balance between 0 and 50000.''',
     "dbname": "banking",
-    "cloak": {
+    "diffix": {
       "sql": '''
 SELECT t3.cli_district_id AS cli,
        t3.city_name AS city,
@@ -331,7 +327,7 @@ ORDER BY 1
 SELECT * FROM table LIMIT X
 ''',
     "dbname": "",
-    "cloak": {
+    "diffix": {
       "sql": ""
     },
     "native": {
@@ -355,7 +351,7 @@ Aircloak cannot return any useful information with this query, because it filter
 <p class="desc">
 ''',
     "dbname": "scihub",
-    "cloak": {
+    "diffix": {
       "sql": '''
 SELECT *
 FROM sep2015
@@ -390,7 +386,7 @@ https://demo.aircloak.com/docs/sql/query-results.html#zero-mean-noise
 ">here</a>.
 ''',
     "dbname": "",
-    "cloak": {
+    "diffix": {
       "sql": ""
     },
     "native": {
@@ -411,7 +407,7 @@ From the query below, we see that a noise value with a standard deviation of 1.2
 <p class="desc">
 ''',
     "dbname": "banking",
-    "cloak": {
+    "diffix": {
       "sql": '''
 SELECT count(DISTINCT client_id),
        count_noise(DISTINCT client_id)
@@ -435,7 +431,7 @@ Layered means that there are multiple noise values, one or two per condition.
 The query here is the same as the previous, with the exception that one condition has been added. The amount of noise has increased from standard deviation 1.0 to sqrt(2), which Aircloak rounds to 2.0.
 ''',
     "dbname": "banking",
-    "cloak": {
+    "diffix": {
       "sql": '''
 SELECT count(DISTINCT client_id),
        count_noise(DISTINCT client_id)
@@ -458,7 +454,7 @@ WHERE cli_district_id = 1
 Now with two conditions, the noise increases to standard deviation of 2.5.
 ''',
     "dbname": "banking",
-    "cloak": {
+    "diffix": {
       "sql": '''
 SELECT count(DISTINCT client_id),
        count_noise(DISTINCT client_id)
@@ -487,7 +483,7 @@ In this query, however, we are taking the sum total of the amount of all banking
 This better illustrates the need for the aggr_noise() functions, as it is otherwise troublesome for the analyst to have to figure out roughly how much the heavy hitting users contribute.
 ''',
     "dbname": "banking",
-    "cloak": {
+    "diffix": {
       "sql": '''
 SELECT sum(amount),
        sum_noise(amount)
@@ -519,7 +515,7 @@ Clearly there is more distortion here than can be accounted for by the random no
 Note also that the relative error is higher than in previous examples. The reason for this is that there are not many distinct users comprising this answer, so the noise is relatively higher.
 ''',
     "dbname": "scihub",
-    "cloak": {
+    "diffix": {
       "sql": '''
 SELECT count(*),
        count_noise(*)
@@ -544,7 +540,7 @@ This query counts the number of users that had each number of downloads, and the
 This query also illustrates why the relative error of the previous query is high: the extreme value itself accounts for 16% of the total downloads in this case. Aircloak necessarily hides this user (as would any anonymization mechanism), and so a high error is unavoidable.
 ''',
     "dbname": "scihub",
-    "cloak": {
+    "diffix": {
       "sql": '''
 SELECT downloads, count(*)
 FROM (
@@ -582,7 +578,7 @@ https://demo.aircloak.com/docs/sql/query-results.html#low-count-filtering
 ">here</a>.
 ''',
     "dbname": "",
-    "cloak": {
+    "diffix": {
       "sql": ""
     },
     "native": {
@@ -610,7 +606,7 @@ and then displayed as though
 is a last name. From this we see that there are over 4100 users whose last names have been suppressed.
 ''',
     "dbname": "banking",
-    "cloak": {
+    "diffix": {
       "sql": '''
 SELECT lastname,
        count(DISTINCT account_id)
@@ -654,7 +650,7 @@ and therefore may not be suppressed, would be mixed with suppressed (non-NULL) v
 condition.
 ''',
     "dbname": "taxi",
-    "cloak": {
+    "diffix": {
       "sql": '''
 SELECT pickup_latitude,
        count(*)
@@ -685,7 +681,7 @@ In the example below, the cloak output does show a suppression bucket (10th row 
 Note that normally one would more likely order this output by pickup_latitude, but we order by count so as to illustrate the reduced suppression.
 ''',
     "dbname": "taxi",
-    "cloak": {
+    "diffix": {
       "sql": '''
 SELECT bucket(pickup_latitude BY 0.0001)
            AS lat,
@@ -717,7 +713,7 @@ Rather than suppress the values for both columns, it shows the value of the firs
 This can be seen in the first six displayed rows.
 ''',
     "dbname": "taxi",
-    "cloak": {
+    "diffix": {
       "sql": '''
 SELECT passenger_count AS riders,
        trip_distance AS distance,
@@ -746,7 +742,7 @@ This query is the same 2-column histogram, but with the position of the first an
 Here we see that Aircloak is showing distance values that were suppressed in the previous query, and suppressing rider counts instead.
 ''',
     "dbname": "taxi",
-    "cloak": {
+    "diffix": {
       "sql": '''
 SELECT trip_distance AS distance,
        passenger_count AS riders,
@@ -776,7 +772,7 @@ Though not displayed here, there is still a small amount of suppression (the nat
 (Note that the cloak automatically casts the output of the 'round()' function as an integer. To align the output of the native and cloak queries here, we explicitly cast the native distance column as 'int'.)
 ''',
     "dbname": "taxi",
-    "cloak": {
+    "diffix": {
       "sql": '''
 SELECT round(trip_distance) AS distance,
        passenger_count AS riders,
@@ -818,7 +814,7 @@ filter don't have two users, and most of the names with two users don't pass the
 filter.
 ''',
     "dbname": "banking",
-    "cloak": {
+    "diffix": {
       "sql": '''
 SELECT lastname
 FROM accounts
@@ -848,7 +844,7 @@ Here we provide a couple examples.
 <b>Bottom line: Avoid answers with very few distinct users</b>
 ''',
     "dbname": "",
-    "cloak": {
+    "diffix": {
       "sql": ""
     },
     "native": {
@@ -864,7 +860,7 @@ With suppression, the cloak never reports column values where only a single user
 Since it would therefore be unexpected not to produce a count, the cloak does so. When an answer would otherwise have been suppressed, the cloak always reports a count of zero, and count_noise of NULL. The latter is necessary to avoid revealing information about a single user.
 ''',
     "dbname": "banking",
-    "cloak": {
+    "diffix": {
       "sql": '''
 SELECT count(*),
        count(DISTINCT client_id) AS users,
@@ -895,7 +891,7 @@ This reporting rule can result in outputs that appear unusual at first glance. I
 Note that in spite of the fact that the cloak query requests last names with only two distinct users each, most of the last names have three or four distinct users in reality. Analysts should avoid queries that have very few users per answer row.
 ''',
     "dbname": "banking",
-    "cloak": {
+    "diffix": {
       "sql": '''
 SELECT lastname,
        count(*),
@@ -927,7 +923,7 @@ Besides distorting answers with noise and suppression, Aircloak places a number 
 One class of limitations are those placed on inequalities in conditions.
 ''',
     "dbname": "",
-    "cloak": {
+    "diffix": {
       "sql": ""
     },
     "native": {
@@ -948,7 +944,7 @@ https://demo.aircloak.com/docs/sql/restrictions.html#constant-ranges
 ">here</a>.
 ''',
     "dbname": "banking",
-    "cloak": {
+    "diffix": {
       "sql": '''
 SELECT count(*)
 FROM accounts
@@ -988,7 +984,7 @@ SELECT min(cli_district_id) FROM accounts
 </span>
 ''',
     "dbname": "banking",
-    "cloak": {
+    "diffix": {
       "sql": '''
 SELECT count(*)
 FROM accounts
@@ -1029,7 +1025,7 @@ https://demo.aircloak.com/docs/sql/restrictions.html#constant-range-alignment
 ">here</a>.
 ''',
     "dbname": "banking",
-    "cloak": {
+    "diffix": {
       "sql": '''
 SELECT count(*)
 FROM accounts
@@ -1057,7 +1053,7 @@ the two answers.
 Here is the first of the two queries.
 ''',
     "dbname": "banking",
-    "cloak": {
+    "diffix": {
       "sql": '''
 SELECT count(*)
 FROM accounts
@@ -1076,7 +1072,7 @@ WHERE cli_district_id BETWEEN 0 AND 10
 And here is the second query.
 ''',
     "dbname": "banking",
-    "cloak": {
+    "diffix": {
       "sql": '''
 SELECT count(*)
 FROM accounts
@@ -1097,7 +1093,7 @@ themselves (0, 1, 2, 5, etc.), or can be shifted by one half the range
 size. For example, a range of size 10 can be aligned at ... -10, 0, 10, 20, ..., or can be aligned shifted by 5, at ... -15, -5, 5, 15, ....
 ''',
     "dbname": "banking",
-    "cloak": {
+    "diffix": {
       "sql": '''
 SELECT count(*)
 FROM accounts
@@ -1126,7 +1122,7 @@ The query here is not aligned because of the minutes offset into the hour.
 The automatic alignment for the query here produces a different time range.
 ''',
     "dbname": "taxi",
-    "cloak": {
+    "diffix": {
       "sql": '''
 SELECT count(*)
 FROM jan08
@@ -1152,7 +1148,7 @@ WHERE pickup_datetime BETWEEN
 This query is correctly aligned (on the hour).
 ''',
     "dbname": "taxi",
-    "cloak": {
+    "diffix": {
       "sql": '''
 SELECT count(*)
 FROM jan08
@@ -1187,7 +1183,7 @@ https://demo.aircloak.com/docs/ops/configuration.html#insights-cloak-configurati
 ">here</a>.
 ''',
     "dbname": '',
-    "cloak": {
+    "diffix": {
       "sql": ''
     },
     "native": {
@@ -1205,7 +1201,7 @@ By default, the column that identifies the unit of protection has a key type of 
 The "hack" is the identifier for the taxi driver, and so it is an individual that is being protected. (Note that the taxi database does not contain identifiers for passengers.)
 ''',
     "dbname": "taxi",
-    "cloak": {
+    "diffix": {
       "sql": '''
 SHOW columns FROM jan08'''
     },
@@ -1229,7 +1225,7 @@ The reason that we protect the account instead of the individual is because many
 On the other hand, every individual (client_id) is associated with only one account. (You can't learn this from Aircloak: the system administrator has to know it.) Since client_id is a subset of account_id, by protecting the account_id, the client_id is automatically also protected.
 ''',
     "dbname": "banking",
-    "cloak": {
+    "diffix": {
       "sql": '''
 SHOW columns FROM accounts'''
     },
@@ -1254,7 +1250,7 @@ For example, if a single individual was the only Sci-hub user from a given city,
 While theoretically possible, the likelihood of this is remote.
 ''',
     "dbname": "scihub",
-    "cloak": {
+    "diffix": {
       "sql": '''
 SHOW columns FROM sep2015'''
     },
@@ -1285,7 +1281,7 @@ https://demo.aircloak.com/docs/sql.html#query-and-subquery-types
 ">here</a>.
 ''',
     "dbname": "",
-    "cloak": {
+    "diffix": {
       "sql": ""
     },
     "native": {
@@ -1313,7 +1309,7 @@ The only clue that something might be amiss is the last row of the cloak answer,
 <p class="desc">
 ''',
     "dbname": "banking",
-    "cloak": {
+    "diffix": {
       "sql": '''
 -- STANDARD QUERY
 SELECT round(nt/500)*500 AS num_trans,
@@ -1356,7 +1352,7 @@ to verify that the suppression has taken place.
 In this case, the 'None' bucket would still exist and so suppression is taking place.
 ''',
     "dbname": "banking",
-    "cloak": {
+    "diffix": {
       "sql": '''
 SELECT acct_date, count(*) AS nt
 FROM transactions
@@ -1391,7 +1387,7 @@ The subquery is not anonymizing because it selects the account_id column, which 
 Note that, because the outer query is not a standard query, the special Aircloak function bucket() must be used instead of round() to produce the histogram buckets.
 ''',
     "dbname": "banking",
-    "cloak": {
+    "diffix": {
       "sql": '''
 -- ANONYMIZING QUERY
 SELECT bucket(nt BY 100) AS num_trans,
@@ -1430,7 +1426,7 @@ The subquery is anonymizing because the "user_id" type column is not selected. T
 The subquery is labeled "RESTRICTED QUERY" because it is not anonymizing, but it is also not standard and so Aircloak SQL restrictions apply.
 ''',
     "dbname": "banking",
-    "cloak": {
+    "diffix": {
       "sql": '''
 -- STANDARD QUERY
 SELECT round(nt/1000)*1000 AS num_trans,
@@ -1467,7 +1463,7 @@ ORDER BY 1
 We are constantly adding new examples, so visit again from time to time!
 ''',
     "dbname": "",
-    "cloak": {
+    "diffix": {
       "sql": ""
     },
     "native": {

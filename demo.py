@@ -23,14 +23,18 @@ pp = pprint.PrettyPrinter(indent=4)
 PORT (defaults to 8080)
 DATA_DIR (holds the database 'training.db', defaults to .)
 LOG_DIR (holds the log file 'training.log', defaults to .)
-NATIVE_USER (user name for native postgres, defaults to 'trainingApp'
+NATIVE_USER (user name for native postgres, defaults to 'direct-user'
 NATIVE_PASS (password for native postgres, no default)
 NATIVE_PORT (defaults to 5432)
 NATIVE_HOST (defaults to db001.gda-score.org)
-CLOAK_USER (user name for cloak postgres, defaults to 'training'
-CLOAK_PASS (password for cloak postgres, no default)
-CLOAK_PORT (defaults to 9432)
-CLOAK_HOST (defaults to attack.aircloak.com)
+TRUSTED_USER (user name for diffix postgres, defaults to 'trusted_user'
+TRUSTED_PASS (password for diffix postgres, no default)
+TRUSTED_PORT (defaults to NATIVE_PORT)
+TRUSTED_HOST (defaults to demo-pg.open-diffix.org)
+UNTRUSTED_USER (user name for diffix postgres, defaults to 'untrusted_user'
+UNTRUSTED_PASS (password for diffix postgres, no default)
+UNTRUSTED_PORT (defaults to NATIVE_PORT)
+UNTRUSTED_HOST (defaults to demo-pg.open-diffix.org)
 '''
 
 
@@ -92,7 +96,7 @@ initClientState = {
         'numRows' : 0,
         'duration': 0
     },
-    'cloak': {
+    'diffix': {
         'sql' : '',
         'runSql' : '',
         'ans' : [],
@@ -118,15 +122,21 @@ ss = {
     'dbPath' : '',
     'logPath' : '',
     'native': {
-        'host': 'db001.gda-score.org',
+        'host': 'demo-pg.open-diffix.org',
         'port': 5432,
-        'user': 'trainingApp',
+        'user': 'direct-user',
         'password': '',
     },
-    'cloak': {
-        'host': 'attack.aircloak.com',
-        'port': 9432,
-        'user': 'training',
+    'trusted': {
+        'host': 'demo-pg.open-diffix.org',
+        'port': 5432,
+        'user': 'trusted_user',
+        'password': '',
+    },
+    'untrusted': {
+        'host': 'demo-pg.open-diffix.org',
+        'port': 5432,
+        'user': 'untrusted_user',
         'password': '',
     },
 }
@@ -192,7 +202,7 @@ def makeWelcomeHtml():
       </div>
       <div class="par-right">
           <font size="5">
-          Welcome to the training app for the Aircloak anonymization system.
+          Welcome to the training app for Diffix for PostgreSQL anonymization.
           </font>
           <br><br>
           <font size="4">
@@ -222,14 +232,14 @@ def makeHtml():
             nativeTabWd = tabWid
         else:
             nativeTabWd = minColWd * nativeCols
-    if s['cloak']['colInfo'] is None:
-        cloakTabWd = tabWid
+    if s['diffix']['colInfo'] is None:
+        diffixTabWd = tabWid
     else:
-        cloakCols = len(s['cloak']['colInfo'])
-        if cloakCols <= 5:
-            cloakTabWd = tabWid
+        diffixCols = len(s['diffix']['colInfo'])
+        if diffixCols <= 5:
+            diffixTabWd = tabWid
         else:
-            cloakTabWd = minColWd * cloakCols
+            diffixTabWd = minColWd * diffixCols
     html = f'''
     <style>
     * {{
@@ -267,7 +277,7 @@ def makeHtml():
         height: {pRightAnsHt}cm;
         width: {rightParWd}cm;
     }}
-    .par-cloak {{
+    .par-diffix {{
         float: left;
         height: {dbParHt}cm;
         width: {dbParWd}cm;
@@ -302,7 +312,7 @@ def makeHtml():
         height: {queryHt}cm;
         width: {queryWd}cm;
     }}
-    .ta-cloak {{
+    .ta-diffix {{
         background-color: #e6f7ff;
     }}
     .ta-native {{
@@ -374,9 +384,9 @@ def makeHtml():
     a:active {{
       color: red;
     }}
-    table.cloak {{
+    table.diffix {{
       table-layout: fixed;
-      width: {cloakTabWd}cm;
+      width: {diffixTabWd}cm;
       border: 1px solid blue;
       text-overflow: clipped;
     }}
@@ -393,7 +403,7 @@ def makeHtml():
     tr.native:nth-child(even) {{
       background-color: #f7ffe6;
     }}
-    td.cloak {{
+    td.diffix {{
       font-size: 14px;
       border-bottom: 1px solid #1aa3ff;
       text-overflow: clipped;
@@ -412,7 +422,7 @@ def makeHtml():
       border-bottom: 1px solid #e60000;
       border-top: 1px solid #e60000;
     }}
-    th.cloak {{
+    th.diffix {{
       white-space: wrap;
       text-align: left;
       font-size: 16px;
@@ -454,13 +464,13 @@ def makeHtml():
         </div>
         <div class="par-right-queries">
             <br>
-            Cloak SQL
+            Diffix SQL
             <span style="display:inline-block; width: {spaceWd}cm;"></span>
             Native SQL
             <form action = "/run" method="POST"
               enctype="multipart/form-data">
-              <textarea class="ta-cloak" name = "cloak"
-                  wrap="hard">{s['cloak']['sql']}</textarea>
+              <textarea class="ta-diffix" name = "diffix"
+                  wrap="hard">{s['diffix']['sql']}</textarea>
               &nbsp; &nbsp;
               <textarea class="ta-native" name = "native"
                   wrap="hard">{s['native']['sql']}</textarea>
@@ -474,8 +484,8 @@ def makeHtml():
             </form>
         </div>
         <div class="par-right-answers">
-          <div class="par-cloak">
-              {s['cloak']['ansHtml']}
+          <div class="par-diffix">
+              {s['diffix']['ansHtml']}
           </div>
           <div class="par-native">
               {s['native']['ansHtml']}
@@ -490,7 +500,7 @@ def getHeaderList(exList):
     headerList = []
     for i in range(len(exList)):
         ex = exList[i]
-        if len(ex['cloak']['sql']) == 0:
+        if len(ex['diffix']['sql']) == 0:
             headerList.append(i)
     headerList.append(10000000000)
     return headerList
@@ -506,13 +516,13 @@ def makeExamplesHtml():
         if i == headerList[curHead+1]:
             curHead += 1
         ex = s['exampleList'][i]
-        if (len(ex['cloak']['sql']) > 0 and
+        if (len(ex['diffix']['sql']) > 0 and
                 (blue < headerList[curHead] or
                     blue >= headerList[curHead+1])):
             # This is not a header, and we don't want to list it
             continue
         end = ''
-        if len(ex['cloak']['sql']) == 0:
+        if len(ex['diffix']['sql']) == 0:
             start = '''<dt><strong>'''
             end = '''</strong>'''
         else:
@@ -540,25 +550,25 @@ def computeErrors():
     s = loadUserState(user)
     # This routine assume that the last native column is the measure, and the
     # previous columns are the values
-    if s['native']['colInfo'] is None or s['cloak']['colInfo'] is None:
+    if s['native']['colInfo'] is None or s['diffix']['colInfo'] is None:
         return
-    if s['native']['colInfo'][0] != s['cloak']['colInfo'][0]:
+    if s['native']['colInfo'][0] != s['diffix']['colInfo'][0]:
         return
     numValCols = len(s['native']['colInfo']) - 1
     #if numValCols <= 0:
         #return
     for i in range(numValCols):
-        if s['native']['colInfo'][i] != s['cloak']['colInfo'][i]:
+        if s['native']['colInfo'][i] != s['diffix']['colInfo'][i]:
             return
     measureIndex = numValCols
-    cloakDict = {}
-    for row in s['cloak']['ans']:
+    diffixDict = {}
+    for row in s['diffix']['ans']:
         key = ''
         for i in range(numValCols):
             key += str(row[i]) + ':::'
         if is_number(row[measureIndex]) is False:
             return
-        cloakDict[key] = row[measureIndex]
+        diffixDict[key] = row[measureIndex]
     newAns = []
     for i in range(len(s['native']['ans'])):
         row = s['native']['ans'][i]
@@ -568,8 +578,8 @@ def computeErrors():
         key = ''
         for i in range(numValCols):
             key += str(row[i]) + ':::'
-        if key in cloakDict:
-            cVal = cloakDict[key]
+        if key in diffixDict:
+            cVal = diffixDict[key]
             nVal = row[measureIndex]
             if is_number(row[measureIndex]) is False:
                 return
@@ -634,7 +644,7 @@ def makeAnswerHtml(sys):
 
 def readFromCache(s,user):
     (conn,c) = validateAndGetCursor()
-    for sys in ['native','cloak']:
+    for sys in ['native','diffix']:
         s[sys]['cached'] = False
         sql = s[sys]['sql']
         key = makeKeyFromSql(sql)
@@ -763,7 +773,7 @@ def populateCache():
     s = copy.deepcopy(initClientState)
     s['exampleList'] = getExampleList()
     for ex in s['exampleList']:
-        for sys in ['native','cloak']:
+        for sys in ['native','diffix']:
             html += addExampleToCache(s,ex,sys)
     return html
 
@@ -1009,20 +1019,34 @@ def getEnvVars():
     env = os.environ.get('NATIVE_HOST')
     if env is not None:
         ss['native']['host'] = env
-    env = os.environ.get('CLOAK_USER')
+    env = os.environ.get('TRUSTED_USER')
     if env is not None:
-        ss['cloak']['user'] = env
-    env = os.environ.get('CLOAK_PASS')
+        ss['trusted']['user'] = env
+    env = os.environ.get('TRUSTED_PASS')
     if env is None:
-        print("Must set environment variable CLOAK_PASS")
+        print("Must set environment variable TRUSTED_PASS")
         quit()
-    ss['cloak']['password'] = env
-    env = os.environ.get('CLOAK_PORT')
+    ss['trusted']['password'] = env
+    env = os.environ.get('TRUSTED_PORT')
     if env is not None:
-        ss['cloak']['port'] = env
-    env = os.environ.get('CLOAK_HOST')
+        ss['trusted']['port'] = env
+    env = os.environ.get('TRUSTED_HOST')
     if env is not None:
-        ss['cloak']['host'] = env
+        ss['trusted']['host'] = env
+    env = os.environ.get('UNTRUSTED_USER')
+    if env is not None:
+        ss['untrusted']['user'] = env
+    env = os.environ.get('UNTRUSTED_PASS')
+    if env is None:
+        print("Must set environment variable UNTRUSTED_PASS")
+        quit()
+    ss['untrusted']['password'] = env
+    env = os.environ.get('UNTRUSTED_PORT')
+    if env is not None:
+        ss['untrusted']['port'] = env
+    env = os.environ.get('UNTRUSTED_HOST')
+    if env is not None:
+        ss['untrusted']['host'] = env
 
 @route('/refresh')
 def doRefresh():
@@ -1080,7 +1104,7 @@ def doCache(index):
     if index < 0 or index >= len(s['exampleList']):
         return("Bad example number")
     ex = s['exampleList'][index]
-    for sys in ['native','cloak']:
+    for sys in ['native','diffix']:
         deleteCacheEntry(ex,sys)
         html += addExampleToCache(s,ex,sys)
     return html
@@ -1089,13 +1113,13 @@ def doCache(index):
 def updateExample(index):
     user = getCookie()
     s = loadUserState(user)
-    s['cloak']['ansHtml'] = ''
+    s['diffix']['ansHtml'] = ''
     s['native']['ansHtml'] = ''
-    s['cloak']['ans'] = []
+    s['diffix']['ans'] = []
     s['native']['ans'] = []
-    s['cloak']['colInfo'] = None
+    s['diffix']['colInfo'] = None
     s['native']['colInfo'] = None
-    s['cloak']['err'] = None
+    s['diffix']['err'] = None
     s['native']['err'] = None
     index = int(index)
     s['example'] = index
@@ -1106,13 +1130,13 @@ def updateExample(index):
     ex = s['exampleList'][index]
     s['description'] = f'''<strong>{ex['heading']}</strong><br>'''
     s['description'] += ex['description']
-    s['cloak']['sql'] = ex['cloak']['sql']
+    s['diffix']['sql'] = ex['diffix']['sql']
     s['dbname'] = ex['dbname']
     makeDbPulldown()
     s['native']['sql'] = ex['native']['sql']
     readFromCache(s,user)
     computeErrors()
-    makeAnswerHtml('cloak')
+    makeAnswerHtml('diffix')
     makeAnswerHtml('native')
     redirect("/training")
     return
@@ -1121,9 +1145,9 @@ def updateExample(index):
 def doRun():
     user = getCookie()
     s = loadUserState(user)
-    s['cloak']['ans'] = []
-    s['cloak']['ansHtml'] = ''
-    s['cloak']['cached'] = False
+    s['diffix']['ans'] = []
+    s['diffix']['ansHtml'] = ''
+    s['diffix']['cached'] = False
     s['native']['ans'] = []
     s['native']['ansHtml'] = ''
     s['native']['cached'] = False
@@ -1132,7 +1156,7 @@ def doRun():
     s['dbname'] = str(request.POST.get('database'))
     print(s['dbname'])
     makeDbPulldown()
-    for sys in ['native','cloak']:
+    for sys in ['native','diffix']:
         sql = str(request.POST.get(sys))
         s[sys]['sql'] = sql
         if len(sql) > 0:
@@ -1140,10 +1164,10 @@ def doRun():
     if len(jobs) > 0:
         gevent.wait(jobs)
     computeErrors()
-    makeAnswerHtml('cloak')
+    makeAnswerHtml('diffix')
     makeAnswerHtml('native')
-    #print(f"Process answers, cloak {s['cloak']['numRows']} rows,  native {s['native']['numRows']} rows")
-    #print(f"Durations, cloak {s['cloak']['duration']} secs,  native {s['native']['duration']} secs")
+    #print(f"Process answers, diffix {s['diffix']['numRows']} rows,  native {s['native']['numRows']} rows")
+    #print(f"Durations, diffix {s['diffix']['duration']} secs,  native {s['native']['duration']} secs")
     redirect("/training")
 
 @route('/logos.png')
