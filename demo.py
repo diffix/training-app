@@ -82,7 +82,9 @@ initClientState = {
     'description' : '',
     'dbList' : [],
     'dbHtml' : '',
+    'modeHtml' : '',
     'dbname' : '',
+    'mode' : '',
     'native': {
         'sql' : '',
         'runSql' : '',
@@ -96,7 +98,20 @@ initClientState = {
         'numRows' : 0,
         'duration': 0
     },
-    'diffix': {
+    'trusted': {
+        'sql' : '',
+        'runSql' : '',
+        'ans' : [],
+        'err' : None,
+        'notices' : '',
+        'ansHtml' : '',
+        'cached' : False,
+        'colInfo' : None,
+        'conn' : None,
+        'numRows' : 0,
+        'duration': 0
+    },
+    'untrusted': {
         'sql' : '',
         'runSql' : '',
         'ans' : [],
@@ -141,7 +156,7 @@ ss = {
     },
 }
 
-def makeDbPulldown():
+def makePulldowns():
     user = getCookie()
     s = loadUserState(user)
     s['dbList'] = ['']
@@ -158,6 +173,15 @@ def makeDbPulldown():
         else:
             s['dbHtml'] += f'''<option value="{db}">{db}</option>'''
     s['dbHtml'] += '''</select>'''
+
+    s['modeHtml'] = ''' <select name="mode">
+                 <option value=" "> </option> '''
+    for mode in ['trusted','untrusted']:
+        if mode == s['mode']:
+            s['modeHtml'] += f'''<option value="{mode}" selected>{mode}</option>'''
+        else:
+            s['modeHtml'] += f'''<option value="{mode}">{mode}</option>'''
+    s['modeHtml'] += '''</select>'''
     return
 
 def makeWelcomeHtml():
@@ -224,6 +248,7 @@ def makeWelcomeHtml():
 def makeHtml():
     user = getCookie()
     s = loadUserState(user)
+    diffixSys = s['mode']
     if s['native']['colInfo'] is None:
         nativeTabWd = tabWid
     else:
@@ -232,10 +257,10 @@ def makeHtml():
             nativeTabWd = tabWid
         else:
             nativeTabWd = minColWd * nativeCols
-    if s['diffix']['colInfo'] is None:
+    if s[diffixSys]['colInfo'] is None:
         diffixTabWd = tabWid
     else:
-        diffixCols = len(s['diffix']['colInfo'])
+        diffixCols = len(s[diffixSys]['colInfo'])
         if diffixCols <= 5:
             diffixTabWd = tabWid
         else:
@@ -384,7 +409,13 @@ def makeHtml():
     a:active {{
       color: red;
     }}
-    table.diffix {{
+    table.trusted {{
+      table-layout: fixed;
+      width: {diffixTabWd}cm;
+      border: 1px solid blue;
+      text-overflow: clipped;
+    }}
+    table.untrusted {{
       table-layout: fixed;
       width: {diffixTabWd}cm;
       border: 1px solid blue;
@@ -403,7 +434,12 @@ def makeHtml():
     tr.native:nth-child(even) {{
       background-color: #f7ffe6;
     }}
-    td.diffix {{
+    td.trusted {{
+      font-size: 14px;
+      border-bottom: 1px solid #1aa3ff;
+      text-overflow: clipped;
+    }}
+    td.untrusted {{
       font-size: 14px;
       border-bottom: 1px solid #1aa3ff;
       text-overflow: clipped;
@@ -422,7 +458,13 @@ def makeHtml():
       border-bottom: 1px solid #e60000;
       border-top: 1px solid #e60000;
     }}
-    th.diffix {{
+    th.trusted {{
+      white-space: wrap;
+      text-align: left;
+      font-size: 16px;
+      background-color: #e6f7ff;
+    }}
+    th.untrusted {{
       white-space: wrap;
       text-align: left;
       font-size: 16px;
@@ -470,12 +512,15 @@ def makeHtml():
             <form action = "/run" method="POST"
               enctype="multipart/form-data">
               <textarea class="ta-diffix" name = "diffix"
-                  wrap="hard">{s['diffix']['sql']}</textarea>
+                  wrap="hard">{s[diffixSys]['sql']}</textarea>
               &nbsp; &nbsp;
               <textarea class="ta-native" name = "native"
                   wrap="hard">{s['native']['sql']}</textarea>
                <br>
                Database:{s['dbHtml']}
+               &nbsp&nbsp&nbsp&nbsp
+               &nbsp&nbsp&nbsp&nbsp
+               Trust Mode:{s['modeHtml']}
                &nbsp&nbsp&nbsp&nbsp
                &nbsp&nbsp&nbsp&nbsp
                <button class="button button-run" type="submit">
@@ -485,7 +530,7 @@ def makeHtml():
         </div>
         <div class="par-right-answers">
           <div class="par-diffix">
-              {s['diffix']['ansHtml']}
+              {s[diffixSys]['ansHtml']}
           </div>
           <div class="par-native">
               {s['native']['ansHtml']}
@@ -548,21 +593,22 @@ def is_number(s):
 def computeErrors():
     user = getCookie()
     s = loadUserState(user)
+    diffixSys = s['mode']
     # This routine assume that the last native column is the measure, and the
     # previous columns are the values
-    if s['native']['colInfo'] is None or s['diffix']['colInfo'] is None:
+    if s['native']['colInfo'] is None or s[diffixSys]['colInfo'] is None:
         return
-    if s['native']['colInfo'][0] != s['diffix']['colInfo'][0]:
+    if s['native']['colInfo'][0] != s[diffixSys]['colInfo'][0]:
         return
     numValCols = len(s['native']['colInfo']) - 1
     #if numValCols <= 0:
         #return
     for i in range(numValCols):
-        if s['native']['colInfo'][i] != s['diffix']['colInfo'][i]:
+        if s['native']['colInfo'][i] != s[diffixSys]['colInfo'][i]:
             return
     measureIndex = numValCols
     diffixDict = {}
-    for row in s['diffix']['ans']:
+    for row in s[diffixSys]['ans']:
         key = ''
         for i in range(numValCols):
             key += str(row[i]) + ':::'
@@ -644,7 +690,7 @@ def makeAnswerHtml(sys):
 
 def readFromCache(s,user):
     (conn,c) = validateAndGetCursor()
-    for sys in ['native','diffix']:
+    for sys in ['native','trusted','untrusted']:
         s[sys]['cached'] = False
         sql = s[sys]['sql']
         key = makeKeyFromSql(sql)
@@ -728,6 +774,7 @@ def addExampleToCache(s,ex,sys):
     html = ''
     job = []
     s['dbname'] = ex['dbname']
+    s['mode'] = ex['mode']
     if len(ex[sys]['sql']) == 0:
         return html
     sql = ex[sys]['sql']
@@ -773,7 +820,7 @@ def populateCache():
     s = copy.deepcopy(initClientState)
     s['exampleList'] = getExampleList()
     for ex in s['exampleList']:
-        for sys in ['native','diffix']:
+        for sys in ['native','trusted','untrusted']:
             html += addExampleToCache(s,ex,sys)
     return html
 
@@ -874,7 +921,7 @@ def reloadExamples():
     s = loadUserState(user)
     from demoConfig import getExampleList
     s['exampleList'] = getExampleList()
-    makeDbPulldown()
+    makePulldowns()
     makeExamplesHtml()
     return
 
@@ -1104,7 +1151,7 @@ def doCache(index):
     if index < 0 or index >= len(s['exampleList']):
         return("Bad example number")
     ex = s['exampleList'][index]
-    for sys in ['native','diffix']:
+    for sys in ['native','trusted','untrusted']:
         deleteCacheEntry(ex,sys)
         html += addExampleToCache(s,ex,sys)
     return html
@@ -1113,14 +1160,6 @@ def doCache(index):
 def updateExample(index):
     user = getCookie()
     s = loadUserState(user)
-    s['diffix']['ansHtml'] = ''
-    s['native']['ansHtml'] = ''
-    s['diffix']['ans'] = []
-    s['native']['ans'] = []
-    s['diffix']['colInfo'] = None
-    s['native']['colInfo'] = None
-    s['diffix']['err'] = None
-    s['native']['err'] = None
     index = int(index)
     s['example'] = index
     putUserExample(user,index)
@@ -1128,15 +1167,25 @@ def updateExample(index):
     if len(s['exampleList']) == 0:
         reloadExamples()
     ex = s['exampleList'][index]
+    diffixSys = ex['mode']
+    s[diffixSys]['ansHtml'] = ''
+    s['native']['ansHtml'] = ''
+    s[diffixSys]['ans'] = []
+    s['native']['ans'] = []
+    s[diffixSys]['colInfo'] = None
+    s['native']['colInfo'] = None
+    s[diffixSys]['err'] = None
+    s['native']['err'] = None
     s['description'] = f'''<strong>{ex['heading']}</strong><br>'''
     s['description'] += ex['description']
-    s['diffix']['sql'] = ex['diffix']['sql']
+    s[diffixSys]['sql'] = ex['diffix']['sql']
     s['dbname'] = ex['dbname']
-    makeDbPulldown()
+    s['mode'] = ex['mode']
+    makePulldowns()
     s['native']['sql'] = ex['native']['sql']
     readFromCache(s,user)
     computeErrors()
-    makeAnswerHtml('diffix')
+    makeAnswerHtml(diffixSys)
     makeAnswerHtml('native')
     redirect("/training")
     return
@@ -1145,29 +1194,35 @@ def updateExample(index):
 def doRun():
     user = getCookie()
     s = loadUserState(user)
-    s['diffix']['ans'] = []
-    s['diffix']['ansHtml'] = ''
-    s['diffix']['cached'] = False
+    s['dbname'] = str(request.POST.get('database'))
+    print(s['dbname'])
+    s['mode'] = str(request.POST.get('mode'))
+    print(s['mode'])
+    diffixSys = s['mode']
+    s[diffixSys]['ans'] = []
+    s[diffixSys]['ansHtml'] = ''
+    s[diffixSys]['cached'] = False
     s['native']['ans'] = []
     s['native']['ansHtml'] = ''
     s['native']['cached'] = False
     print(f"Example index is {s['example']}")
     jobs = []
-    s['dbname'] = str(request.POST.get('database'))
-    print(s['dbname'])
-    makeDbPulldown()
-    for sys in ['native','diffix']:
-        sql = str(request.POST.get(sys))
+    makePulldowns()
+    for sys in ['native',s['mode']]:
+        if sys == 'native':
+            sql = str(request.POST.get(sys))
+        else:
+            sql = str(request.POST.get('diffix'))
         s[sys]['sql'] = sql
         if len(sql) > 0:
             jobs.append(gevent.spawn(doQuery,[sys,sql,s]))
     if len(jobs) > 0:
         gevent.wait(jobs)
     computeErrors()
-    makeAnswerHtml('diffix')
+    makeAnswerHtml(diffixSys)
     makeAnswerHtml('native')
-    #print(f"Process answers, diffix {s['diffix']['numRows']} rows,  native {s['native']['numRows']} rows")
-    #print(f"Durations, diffix {s['diffix']['duration']} secs,  native {s['native']['duration']} secs")
+    #print(f"Process answers, diffix {s[diffixSys]['numRows']} rows,  native {s['native']['numRows']} rows")
+    #print(f"Durations, diffix {s[diffixSys]['duration']} secs,  native {s['native']['duration']} secs")
     redirect("/training")
 
 @route('/logos.png')

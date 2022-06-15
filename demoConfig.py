@@ -4,10 +4,11 @@ exampleList = [
     "heading": "Welcome",
     "description": '''
     <p class="desc">
-Welcome to the Diffix for PostgreSQL Training App. Use this app to understand how to make the best use of Diffix anonymization. Select from the topics listed on the left.
+Welcome to the Diffix for PostgreSQL Training App. Use this app to understand the capabilities and limitations of Diffix Elm, and how to get the most out of Diffix Elm. Follow the prepared queries in the topics on the left, or write your own queries.
     <p class="desc">
-For more information, visit the <a target=_blank href="https:/open-diffix.org">Open Diffix project website</a>, or contact us at hello@open-diffix.org.''',
+For more information, visit the Open Diffix project website at <a target=_blank href="https:/open-diffix.org">open-diffix.org</a>, or contact us at hello@open-diffix.org.''',
     "dbname": "",
+    "mode": "trusted",
     "diffix": {
       "sql": ""
     },
@@ -19,19 +20,20 @@ For more information, visit the <a target=_blank href="https:/open-diffix.org">O
     "heading": "Using the app",
     "description": '''
     <p class="desc">
-A series of examples are listed on the left. Each example provides SQL queries for both Aircloak and the native data. The blue SQL window below on the left is for Aircloak, while the green one on the right is for native PostgreSQL. You may modify the queries or write new ones. While the SQL syntax for Aircloak and native SQL is usually the same, this is not always the case.
+A series of examples are listed on the left. Each example provides SQL queries for both Diffix Elm and the native data. The blue SQL window below on the left is for Diffix Elm, while the green one on the right is for the raw (non-anonymized) output. You may modify the queries or write new ones. Note that the SQL syntax for Diffix Elm and native SQL can be different.
     <p class="desc">
     For users new to the system, it is useful to take the examples in the order provided.
     <p class="desc">
-    The app displays the results of a cached query. Click "Run" to re-execute the query for both Aircloak and native, or to execute any changes you make to the SQL.
+    The app displays the results of a cached query. Click "Run" to re-execute the query for both Diffix Elm and native, or to execute any changes you make to the SQL.
     <p class="desc">
     This app has access to several different databases; <a target=_blank href="https://www.gda-score.org/resources/databases/czech-banking-data/">banking</a>, <a target=_blank href="https://www.gda-score.org/resources/databases/usa-census-database/">census0</a>, <a target=_blank href="https://www.gda-score.org/resources/databases/database-2/">scihub</a>, and <a target=_blank href="https://www.gda-score.org/resources/databases/database-1/">taxi</a>. You must select the appropriate database from the pull-down menu if you write a query.
     <p class="desc">
     The app indicates how many rows are in each answer, and the query execution time for each. However, the app displays only the first 100 rows of data
     <p class="desc">
-    In addition to the query results for both Aircloak and native queries, the app usually displays the absolute and relative error between the noisy Aircloak and correct native answers. The error is not displayed in cases where there is no matching column value between the cloak and the native output for the displayed rows.
+    In addition to the query results for both Diffix Elm and native queries, the app usually displays the absolute and relative error between the noisy Diffix Elm and correct native answers. The error is not displayed in cases where there is no matching column value between the cloak and the native output for the displayed rows.
     ''',
     "dbname": "",
+    "mode": "trusted",
     "diffix": {
       "sql": ""
     },
@@ -41,8 +43,9 @@ A series of examples are listed on the left. Each example provides SQL queries f
   },
   {
     "heading": "Schema exploration",
-    "description": '''<p class="desc">Aircloak provides MySQL-like commands for exploring the schema.''',
+    "description": '''<p class="desc">Diffix Elm provides MySQL-like commands for exploring the schema.''',
     "dbname": "",
+    "mode": "trusted",
     "diffix": {
       "sql": ""
     },
@@ -54,17 +57,22 @@ A series of examples are listed on the left. Each example provides SQL queries f
     "heading": "Show tables",
     "description": '''
 <p class="desc">
-Aircloak accepts the MySQL "SHOW tables" command.
+Diffix Elm accepts the MySQL "SHOW tables" command.
 <p class="desc">
-Note that Aircloak indicates whether a table is
+Note that Diffix Elm indicates whether a table is
 <a target=_blank href="https://demo.aircloak.com/docs/ops/configuration.html#insights-cloak-configuration">
 personal or non-personal</a>. Non-personal tables contain no user-specific data and are not anonymized.
 ''',
     
     "dbname": "banking",
+    "mode": "trusted",
     "diffix": {
       "sql": '''
-SHOW tables'''
+SELECT *
+FROM pg_catalog.pg_tables
+WHERE schemaname != 'pg_catalog' AND 
+schemaname != 'information_schema';
+'''
     },
     "native": {
       "sql": '''
@@ -78,9 +86,9 @@ AND table_catalog='banking' '''
     "heading": "Show columns",
     "description": '''
 <p class="desc">
-Aircloak accepts the MySQL "SHOW columns FROM table" command.
+Diffix Elm accepts the MySQL "SHOW columns FROM table" command.
 <p class="desc">
-In addition to the column name and type, Aircloak displays two additional attributes. The analyst needs to be aware of these attributes when writing certain queries.
+In addition to the column name and type, Diffix Elm displays two additional attributes. The analyst needs to be aware of these attributes when writing certain queries.
 <p class="desc">
 The <b>key type</b> attribute has two roles. First, it indicates which column identifies the protected entity in the database (the entity whose anonynimity is being protected). This column has key type
 <span style="font-family:'Courier New'">user_id</span>.
@@ -103,6 +111,7 @@ Read more
 <p class="desc">
 ''',
     "dbname": "banking",
+    "mode": "trusted",
     "diffix": {
       "sql": '''
 SHOW columns FROM accounts'''
@@ -116,8 +125,9 @@ WHERE table_name   = 'accounts' '''
   },
   {
     "heading": "Basic queries",
-    "description": '''<p class="desc">Listed here are a few of the most basic queries that can be executed with Aircloak.''',
+    "description": '''<p class="desc">Listed here are a few of the most basic queries that can be executed with Diffix Elm.''',
     "dbname": "",
+    "mode": "trusted",
     "diffix": {
       "sql": ""
     },
@@ -127,16 +137,17 @@ WHERE table_name   = 'accounts' '''
   },
   {
     "heading": "Counting users",
-    "description": '''<p class="desc">Count the number of distinct users with bank accounts.''',
+    "description": '''<p class="desc">Count the number of bank accounts.''',
     "dbname": "banking",
+    "mode": "trusted",
     "diffix": {
       "sql": '''
-SELECT count(DISTINCT client_id)
+SELECT count(DISTINCT account_id)
 FROM accounts'''
     },
     "native": {
       "sql": '''
-SELECT count(DISTINCT client_id)
+SELECT count(DISTINCT account_id)
 FROM accounts'''
     }
   },
@@ -144,6 +155,7 @@ FROM accounts'''
     "heading": "Counting rows",
     "description": '''<p class="desc">Count the number of rides in the taxi database (one ride per row).''',
     "dbname": "taxi",
+    "mode": "trusted",
     "diffix": {
       "sql": '''
 SELECT count(*)
@@ -164,6 +176,7 @@ Count the number of different countries from which SciHub downloads took place.
 <font color="red"> Note that this query takes ten seconds or so</font>
 ''',
     "dbname": "scihub",
+    "mode": "trusted",
     "diffix": {
       "sql": '''
 SELECT count(DISTINCT country)
@@ -179,6 +192,7 @@ FROM sep2015'''
     "heading": "Histogram",
     "description": '''<p class="desc">Count the number of customers in each CLI District.''',
     "dbname": "banking",
+    "mode": "trusted",
     "diffix": {
       "sql": '''
 SELECT cli_district_id AS cli,
@@ -205,6 +219,7 @@ Histogram of counts of individuals by number of marriages per 5-year age group.
 <font color="red">Note query takes around 1/2 minute</font>
 ''',
     "dbname": "census0",
+    "mode": "trusted",
     "diffix": {
       "sql": '''
 SELECT bucket(age by 5) AS age, 
@@ -229,8 +244,9 @@ ORDER BY 1,2
   {
     "heading": "Sum",
     "description": '''<p class="desc">The total sum of all transaction amounts.
-    <p class="desc">Aircloak also supports min, max, median, average, stddev, and variance. Try modifying the query for these different aggregates.''',
+    <p class="desc">Diffix Elm also supports min, max, median, average, stddev, and variance. Try modifying the query for these different aggregates.''',
     "dbname": "banking",
+    "mode": "trusted",
     "diffix": {
       "sql": '''
 SELECT sum(amount)
@@ -246,6 +262,7 @@ FROM transactions'''
     "heading": "GROUP BY / nested SELECT",
     "description": '''<p class="desc">Builds a histogram of the number of users with different total transaction amounts.''',
     "dbname": "banking",
+    "mode": "trusted",
     "diffix": {
       "sql": '''
 SELECT bucket(sums by 20000) AS amount,
@@ -273,6 +290,7 @@ ORDER BY 1'''
     "heading": "JOIN",
     "description": '''<p class="desc">Builds a histogram of the number of users in each CLI District for users with an average account balance between 0 and 50000.''',
     "dbname": "banking",
+    "mode": "trusted",
     "diffix": {
       "sql": '''
 SELECT t3.cli_district_id AS cli,
@@ -327,6 +345,7 @@ ORDER BY 1
 SELECT * FROM table LIMIT X
 ''',
     "dbname": "",
+    "mode": "trusted",
     "diffix": {
       "sql": ""
     },
@@ -347,10 +366,11 @@ One of the first things an analyst may do when presented with a new database is:
 <p class="desc">
 This gives the analyst an immediate impression of what data he or she is dealing with.
 <p class="desc">
-Aircloak cannot return any useful information with this query, because it filters out any information related to one or a few users. Rather than attempt to run the query (which would take a very long time), Aircloak recognizes that the answer would contain nothing and returns an error message to that effect.
+Diffix Elm cannot return any useful information with this query, because it filters out any information related to one or a few users. Rather than attempt to run the query (which would take a very long time), Diffix Elm recognizes that the answer would contain nothing and returns an error message to that effect.
 <p class="desc">
 ''',
     "dbname": "scihub",
+    "mode": "trusted",
     "diffix": {
       "sql": '''
 SELECT *
@@ -371,7 +391,7 @@ LIMIT 10
     "heading": "Noise",
     "description": '''
 <p class="desc">
-Aircloak adds noise to answers. The following set of examples illustrate how noise is added, how an analyst may guage how much noise is added, and potential pitfalls.
+Diffix Elm adds noise to answers. The following set of examples illustrate how noise is added, how an analyst may guage how much noise is added, and potential pitfalls.
 <p class="desc">
 From these examples you will learn about:
 <ul>
@@ -386,6 +406,7 @@ https://demo.aircloak.com/docs/sql/query-results.html#zero-mean-noise
 ">here</a>.
 ''',
     "dbname": "",
+    "mode": "trusted",
     "diffix": {
       "sql": ""
     },
@@ -397,16 +418,17 @@ https://demo.aircloak.com/docs/sql/query-results.html#zero-mean-noise
     "heading": "aggr_noise()",
     "description": '''
 <p class="desc">
-Aircloak provides a set of aggregate functions that indicate how much noise it adds to each answer.
+Diffix Elm provides a set of aggregate functions that indicate how much noise it adds to each answer.
 The available functions are 'count_noise()', 'sum_noise()', 'avg_noise()', 'stddev_noise()', and 'variance_noise()'.
 They correspond to the functions 'count()', 'sum()', 'avg()', 'stddev()', and 'variance()'.
 <p class="desc">
-Aircloak adds random noise according to a Gaussian distribution ("bell curve"). The 'aggr_noise()' value is the standard deviation of the Gaussian sample.
+Diffix Elm adds random noise according to a Gaussian distribution ("bell curve"). The 'aggr_noise()' value is the standard deviation of the Gaussian sample.
 <p class="desc">
 From the query below, we see that a noise value with a standard deviation of 1.2 was added to the answer.
 <p class="desc">
 ''',
     "dbname": "banking",
+    "mode": "trusted",
     "diffix": {
       "sql": '''
 SELECT count(DISTINCT client_id),
@@ -425,12 +447,13 @@ FROM accounts
     "heading": "Noise per condition",
     "description": '''
 <p class="desc">
-Aircloak has a unique way of adding noise which we call "sticky layered noise".  Sticky means that the same query produces the same noise. Try re-running the query, and you will see that you get the same noisy answer every time.
+Diffix Elm has a unique way of adding noise which we call "sticky layered noise".  Sticky means that the same query produces the same noise. Try re-running the query, and you will see that you get the same noisy answer every time.
 <p class="desc">
 Layered means that there are multiple noise values, one or two per condition.
-The query here is the same as the previous, with the exception that one condition has been added. The amount of noise has increased from standard deviation 1.0 to sqrt(2), which Aircloak rounds to 2.0.
+The query here is the same as the previous, with the exception that one condition has been added. The amount of noise has increased from standard deviation 1.0 to sqrt(2), which Diffix Elm rounds to 2.0.
 ''',
     "dbname": "banking",
+    "mode": "trusted",
     "diffix": {
       "sql": '''
 SELECT count(DISTINCT client_id),
@@ -454,6 +477,7 @@ WHERE cli_district_id = 1
 Now with two conditions, the noise increases to standard deviation of 2.5.
 ''',
     "dbname": "banking",
+    "mode": "trusted",
     "diffix": {
       "sql": '''
 SELECT count(DISTINCT client_id),
@@ -476,13 +500,14 @@ WHERE cli_district_id = 1 AND
     "heading": "User-dependent",
     "description": '''
 <p class="desc">
-Aircloak adds enough noise to hide the influence of individual users. Often some users contribute more to the answer than other users. This wasn't the case in the previous three queries because we were counting distinct users, so every user contributed exactly one, and the amount of noise was enough to hide each user.
+Diffix Elm adds enough noise to hide the influence of individual users. Often some users contribute more to the answer than other users. This wasn't the case in the previous three queries because we were counting distinct users, so every user contributed exactly one, and the amount of noise was enough to hide each user.
 <p class="desc">
 In this query, however, we are taking the sum total of the amount of all banking transactions, and users with more transactions at higher amounts contribute more to the answer. As a result, the amount of noise is enough to hide the heavy contributors. In this case, the standard deviation of the noise is in the millions! Correspondingly, the absolute error is similarly high. However, the relative error is still very small!
 <p class="desc">
 This better illustrates the need for the aggr_noise() functions, as it is otherwise troublesome for the analyst to have to figure out roughly how much the heavy hitting users contribute.
 ''',
     "dbname": "banking",
+    "mode": "trusted",
     "diffix": {
       "sql": '''
 SELECT sum(amount),
@@ -507,14 +532,15 @@ WHERE cli_district_id = 1 AND
 <p class="desc">
 It may have occurred to you that one could determine roughly what the extreme value is by looking at the aggr_noise() value. This would be a privacy violation.
 <p class="desc">
-This is not, however, the case. Before determining how much noise to add, Aircloak "flattens" the highest and lowest values so that they are similar in magnitude to at least a few other high and low values.
+This is not, however, the case. Before determining how much noise to add, Diffix Elm "flattens" the highest and lowest values so that they are similar in magnitude to at least a few other high and low values.
 <p class="desc">
 The query below is a good example of this. The absolute error is many times greater than the noise standard deviation.
-Clearly there is more distortion here than can be accounted for by the random noise alone. The extra distortion is due to the fact that there is an extreme value in the answer: one user with an unusually high number of downloads (rows) compared to the other users. Aircloak lowers the answer roughly proportionally to the contribution of the extreme value. The next example gives more detail.
+Clearly there is more distortion here than can be accounted for by the random noise alone. The extra distortion is due to the fact that there is an extreme value in the answer: one user with an unusually high number of downloads (rows) compared to the other users. Diffix Elm lowers the answer roughly proportionally to the contribution of the extreme value. The next example gives more detail.
 <p class="desc">
 Note also that the relative error is higher than in previous examples. The reason for this is that there are not many distinct users comprising this answer, so the noise is relatively higher.
 ''',
     "dbname": "scihub",
+    "mode": "trusted",
     "diffix": {
       "sql": '''
 SELECT count(*),
@@ -537,9 +563,10 @@ WHERE country = 'United States'
 <p class="desc">
 This query counts the number of users that had each number of downloads, and then displays them in descending order of number of downloads. Note that this would not necessarily be the best way to query the cloak for this data, but we do it here primarily to show that a single user has an extreme number of downloads, nearly double that of the next user.
 <p class="desc">
-This query also illustrates why the relative error of the previous query is high: the extreme value itself accounts for 16% of the total downloads in this case. Aircloak necessarily hides this user (as would any anonymization mechanism), and so a high error is unavoidable.
+This query also illustrates why the relative error of the previous query is high: the extreme value itself accounts for 16% of the total downloads in this case. Diffix Elm necessarily hides this user (as would any anonymization mechanism), and so a high error is unavoidable.
 ''',
     "dbname": "scihub",
+    "mode": "trusted",
     "diffix": {
       "sql": '''
 SELECT downloads, count(*)
@@ -571,13 +598,14 @@ ORDER BY 1 DESC
     "heading": "Suppression",
     "description": '''
 <p class="desc">
-Aircloak suppresses answers that pertain to too few individuals. The following set of example illustrate this anonymization feature.
+Diffix Elm suppresses answers that pertain to too few individuals. The following set of example illustrate this anonymization feature.
 Read more 
 <a target=_blank href="
 https://demo.aircloak.com/docs/sql/query-results.html#low-count-filtering
 ">here</a>.
 ''',
     "dbname": "",
+    "mode": "trusted",
     "diffix": {
       "sql": ""
     },
@@ -593,9 +621,9 @@ This example queries for the number of users with each last name and displays th
 <p class="desc">
 Simply adding noise to an answer is not enough to preserve anonymity. If there is only one user in the database with a given last name, then merely displaying this last name would break anonymity.
 <p class="desc">
-The native answer here shows that there are 3895 distinct last names (rows) in the database. Aircloak, however, only reveals only a fraction of these names: those that are shared by multiple users. The remaining names are hidden.
+The native answer here shows that there are 3895 distinct last names (rows) in the database. Diffix Elm, however, only reveals only a fraction of these names: those that are shared by multiple users. The remaining names are hidden.
 <p class="desc">
-To inform the analyst that last names have been suppressed, and to give an indication of how much data has been suppressed, Aircloak places all of the suppressed rows in a bucket labeled
+To inform the analyst that last names have been suppressed, and to give an indication of how much data has been suppressed, Diffix Elm places all of the suppressed rows in a bucket labeled
 &nbsp<span style="font-family:'Courier New'">*</span>&nbsp
 and then displays the anonymized aggregate for that bucket.
 <p class="desc">
@@ -606,6 +634,7 @@ and then displayed as though
 is a last name. From this we see that there are over 4100 users whose last names have been suppressed.
 ''',
     "dbname": "banking",
+    "mode": "trusted",
     "diffix": {
       "sql": '''
 SELECT lastname,
@@ -633,9 +662,9 @@ This is a similar kind of query, but this time displaying numbers instead of tex
 <p class="desc">
 In this case, rather than return
 &nbsp<span style="font-family:'Courier New'">*</span>&nbsp
-as the default symbol for identifying the suppression bucket, Aircloak returns
+as the default symbol for identifying the suppression bucket, Diffix Elm returns
 &nbsp<span style="font-family:'Courier New'">NULL</span>&nbsp
-(which here is displayed as 'None' because of the python implementation of this training program). Aircloak can't return
+(which here is displayed as 'None' because of the python implementation of this training program). Diffix Elm can't return
 &nbsp<span style="font-family:'Courier New'">*</span>&nbsp
 for numbers because
 &nbsp<span style="font-family:'Courier New'">*</span>&nbsp
@@ -650,6 +679,7 @@ and therefore may not be suppressed, would be mixed with suppressed (non-NULL) v
 condition.
 ''',
     "dbname": "taxi",
+    "mode": "trusted",
     "diffix": {
       "sql": '''
 SELECT pickup_latitude,
@@ -681,6 +711,7 @@ In the example below, the cloak output does show a suppression bucket (10th row 
 Note that normally one would more likely order this output by pickup_latitude, but we order by count so as to illustrate the reduced suppression.
 ''',
     "dbname": "taxi",
+    "mode": "trusted",
     "diffix": {
       "sql": '''
 SELECT bucket(pickup_latitude BY 0.0001)
@@ -708,11 +739,12 @@ ORDER BY 2 DESC
 <p class="desc">
 This query builds a 2-column histogram of number of rides from the number of riders and trip distance.
 <p class="desc">
-Aircloak attempts to display as much information as it can before suppressing.
+Diffix Elm attempts to display as much information as it can before suppressing.
 Rather than suppress the values for both columns, it shows the value of the first (riders) column, and suppresses only the values of the second (distance) column.
 This can be seen in the first six displayed rows.
 ''',
     "dbname": "taxi",
+    "mode": "trusted",
     "diffix": {
       "sql": '''
 SELECT passenger_count AS riders,
@@ -736,12 +768,13 @@ GROUP BY 1,2
     "heading": "Two columns (reversed)",
     "description": '''
 <p class="desc">
-By default, Aircloak attempts to display as much as it can about columns to the left, and do suppression of values on columns to the right.  
+By default, Diffix Elm attempts to display as much as it can about columns to the left, and do suppression of values on columns to the right.  
 This query is the same 2-column histogram, but with the position of the first and second columns reversed.
 <p class="desc">
-Here we see that Aircloak is showing distance values that were suppressed in the previous query, and suppressing rider counts instead.
+Here we see that Diffix Elm is showing distance values that were suppressed in the previous query, and suppressing rider counts instead.
 ''',
     "dbname": "taxi",
+    "mode": "trusted",
     "diffix": {
       "sql": '''
 SELECT trip_distance AS distance,
@@ -772,6 +805,7 @@ Though not displayed here, there is still a small amount of suppression (the nat
 (Note that the cloak automatically casts the output of the 'round()' function as an integer. To align the output of the native and cloak queries here, we explicitly cast the native distance column as 'int'.)
 ''',
     "dbname": "taxi",
+    "mode": "trusted",
     "diffix": {
       "sql": '''
 SELECT round(trip_distance) AS distance,
@@ -798,13 +832,13 @@ ORDER BY 1,2
     "heading": "When to suppress?",
     "description": '''
 <p class="desc">
-The threshold for the number of distinct users at which Aircloak decides whether or not to suppress is not a hard threshold. Rather it is based on a sticky layered noise value with mean 4. In addition, Aircloak always suppresses rows for which only a single user contributes.
+The threshold for the number of distinct users at which Diffix Elm decides whether or not to suppress is not a hard threshold. Rather it is based on a sticky layered noise value with mean 4. In addition, Diffix Elm always suppresses rows for which only a single user contributes.
 <p class="desc">
-Put another way, any row reported by Aircloak has at least two distinct users, but a row with two distinct users may well not be reported.
+Put another way, any row reported by Diffix Elm has at least two distinct users, but a row with two distinct users may well not be reported.
 <p class="desc">
 This query illustrates the noisy threshold. The native answer lists the first 100 of the 197 last names for which exactly two users have the last name. The cloak answer not only displays far fewer names, but in fact very few if any of the names in fact have two distinct users.
 <p class="desc">
-The reason for this is that Aircloak adds noise <b>before</b> applying the
+The reason for this is that Diffix Elm adds noise <b>before</b> applying the
 <span style="font-family:'Courier New'">HAVING</span>
 filter.
 As a result, most of the names that pass the
@@ -814,6 +848,7 @@ filter don't have two users, and most of the names with two users don't pass the
 filter.
 ''',
     "dbname": "banking",
+    "mode": "trusted",
     "diffix": {
       "sql": '''
 SELECT lastname
@@ -837,13 +872,14 @@ ORDER BY lastname DESC
     "heading": "Low aggregates",
     "description": '''
 <p class="desc">
-Aircloak avoids reporting aggregate results that would be unexpected or impossible without anonymization, for instance negative counts. By doing so, Aircloak not only makes its output more sensible for an analyst, but also avoids problems with business intelligence tools that would not know how to handle unexpected outputs.
+Diffix Elm avoids reporting aggregate results that would be unexpected or impossible without anonymization, for instance negative counts. By doing so, Diffix Elm not only makes its output more sensible for an analyst, but also avoids problems with business intelligence tools that would not know how to handle unexpected outputs.
 <p class="desc">
 Here we provide a couple examples.
 <p class="desc">
 <b>Bottom line: Avoid answers with very few distinct users</b>
 ''',
     "dbname": "",
+    "mode": "trusted",
     "diffix": {
       "sql": ""
     },
@@ -860,6 +896,7 @@ With suppression, the cloak never reports column values where only a single user
 Since it would therefore be unexpected not to produce a count, the cloak does so. When an answer would otherwise have been suppressed, the cloak always reports a count of zero, and count_noise of NULL. The latter is necessary to avoid revealing information about a single user.
 ''',
     "dbname": "banking",
+    "mode": "trusted",
     "diffix": {
       "sql": '''
 SELECT count(*),
@@ -882,7 +919,7 @@ WHERE lastname = 'Adam'
     "heading": "Noisy count < 2",
     "description": '''
 <p class="desc">
-Since noise can be negative, it is possible to have a situation where the noise results in a negative count, which is unexpected. Furthermore, because of suppression, the cloak will never produce a answer that pertains to a single user. Therefore, a count of 1 or 0, though normally reasonable, is non-sensical in the context of Aircloak.
+Since noise can be negative, it is possible to have a situation where the noise results in a negative count, which is unexpected. Furthermore, because of suppression, the cloak will never produce a answer that pertains to a single user. Therefore, a count of 1 or 0, though normally reasonable, is non-sensical in the context of Diffix Elm.
 <p class="desc">
 When the cloak reports a row with one or more column values, and the noisy count is one or less, the cloak automatically reports a value of 2. In addition, the cloak reports a count_noise of NULL. The NULL count_noise can serve as an indication that the count has been clipped.
 <p class="desc">
@@ -891,6 +928,7 @@ This reporting rule can result in outputs that appear unusual at first glance. I
 Note that in spite of the fact that the cloak query requests last names with only two distinct users each, most of the last names have three or four distinct users in reality. Analysts should avoid queries that have very few users per answer row.
 ''',
     "dbname": "banking",
+    "mode": "trusted",
     "diffix": {
       "sql": '''
 SELECT lastname,
@@ -918,11 +956,12 @@ ORDER BY 1
     "heading": "Inequalities",
     "description": '''
 <p class="desc">
-Besides distorting answers with noise and suppression, Aircloak places a number of limitations on the SQL itself in order to prevent a variety of attacks.
+Besides distorting answers with noise and suppression, Diffix Elm places a number of limitations on the SQL itself in order to prevent a variety of attacks.
 <p class="desc">
 One class of limitations are those placed on inequalities in conditions.
 ''',
     "dbname": "",
+    "mode": "trusted",
     "diffix": {
       "sql": ""
     },
@@ -937,13 +976,14 @@ One class of limitations are those placed on inequalities in conditions.
 <p class="desc">
 Most inequalities must be bounded on both sides: both the lower and upper bounds must be specified.
 <p class="desc">
-The following query is disallowed by Aircloak because a lower bound is not specified.
+The following query is disallowed by Diffix Elm because a lower bound is not specified.
 Read more 
 <a target=_blank href="
 https://demo.aircloak.com/docs/sql/restrictions.html#constant-ranges
 ">here</a>.
 ''',
     "dbname": "banking",
+    "mode": "trusted",
     "diffix": {
       "sql": '''
 SELECT count(*)
@@ -968,22 +1008,23 @@ If the analyst happens to know that there are no values of
 lower than 0, then by setting a lower bound of 0, the query
 works.
 <p class="desc">
-Ranges in Aircloak must be '>=' on the lower bound and '<' on the
-upper bound. Because of this, Aircloak changes the operation of
+Ranges in Diffix Elm must be '>=' on the lower bound and '<' on the
+upper bound. Because of this, Diffix Elm changes the operation of
 <span style="font-family:'Courier New'">BETWEEN</span>
 to follow this convention. As a result, to ask for a range between
-0 and 9 inclusive, Aircloak requires the condition
+0 and 9 inclusive, Diffix Elm requires the condition
 <span style="font-family:'Courier New'">BETWEEN 0 and 10</span>.
 <p class="desc">
 The likely minimum value of
 <span style="font-family:'Courier New'">cli_district_id</span>
-could be determined within Aircloak using a query like this:
+could be determined within Diffix Elm using a query like this:
 <p class="desc">
 &nbsp&nbsp&nbsp&nbsp&nbsp<span style="font-family:'Courier New'">
 SELECT min(cli_district_id) FROM accounts
 </span>
 ''',
     "dbname": "banking",
+    "mode": "trusted",
     "diffix": {
       "sql": '''
 SELECT count(*)
@@ -1009,12 +1050,12 @@ between 0 and 10 inclusive?
 The query shown here would be the natural thing to do.
 The cloak answer, however, has a huge error.
 <p class="desc">
-The problem here is that Aircloak requires that all ranges
+The problem here is that Diffix Elm requires that all ranges
 fall into a preconfigured set of sizes and offsets. The sizes
 follow the pattern ..., 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, ...
 The query here doesn't fall into this alignment, and so the cloak
 automatically modifies the query so that it does.
-Aircloak provides a notice over the API to this effect so that the
+Diffix Elm provides a notice over the API to this effect so that the
 analyst may know what has happened.
 <p class="desc">
 From the notice, we see that the cloak modified the range to be
@@ -1025,6 +1066,7 @@ https://demo.aircloak.com/docs/sql/restrictions.html#constant-range-alignment
 ">here</a>.
 ''',
     "dbname": "banking",
+    "mode": "trusted",
     "diffix": {
       "sql": '''
 SELECT count(*)
@@ -1053,6 +1095,7 @@ the two answers.
 Here is the first of the two queries.
 ''',
     "dbname": "banking",
+    "mode": "trusted",
     "diffix": {
       "sql": '''
 SELECT count(*)
@@ -1072,6 +1115,7 @@ WHERE cli_district_id BETWEEN 0 AND 10
 And here is the second query.
 ''',
     "dbname": "banking",
+    "mode": "trusted",
     "diffix": {
       "sql": '''
 SELECT count(*)
@@ -1093,6 +1137,7 @@ themselves (0, 1, 2, 5, etc.), or can be shifted by one half the range
 size. For example, a range of size 10 can be aligned at ... -10, 0, 10, 20, ..., or can be aligned shifted by 5, at ... -15, -5, 5, 15, ....
 ''',
     "dbname": "banking",
+    "mode": "trusted",
     "diffix": {
       "sql": '''
 SELECT count(*)
@@ -1122,6 +1167,7 @@ The query here is not aligned because of the minutes offset into the hour.
 The automatic alignment for the query here produces a different time range.
 ''',
     "dbname": "taxi",
+    "mode": "trusted",
     "diffix": {
       "sql": '''
 SELECT count(*)
@@ -1148,6 +1194,7 @@ WHERE pickup_datetime BETWEEN
 This query is correctly aligned (on the hour).
 ''',
     "dbname": "taxi",
+    "mode": "trusted",
     "diffix": {
       "sql": '''
 SELECT count(*)
@@ -1183,6 +1230,7 @@ https://demo.aircloak.com/docs/ops/configuration.html#insights-cloak-configurati
 ">here</a>.
 ''',
     "dbname": '',
+    "mode": "trusted",
     "diffix": {
       "sql": ''
     },
@@ -1201,6 +1249,7 @@ By default, the column that identifies the unit of protection has a key type of 
 The "hack" is the identifier for the taxi driver, and so it is an individual that is being protected. (Note that the taxi database does not contain identifiers for passengers.)
 ''',
     "dbname": "taxi",
+    "mode": "trusted",
     "diffix": {
       "sql": '''
 SHOW columns FROM jan08'''
@@ -1222,9 +1271,10 @@ Note that the accounts table also has an identifier for the individual, which is
 <p class="desc">
 The reason that we protect the account instead of the individual is because many accounts are joint accounts, and so have two individuals associated with them. Since it is possible to view records that pertain to two protected units, it is possible that a small amount of data may occasionally be leaked about single accounts. The owners of these accounts would no doubt regard this as a privacy violation.
 <p class="desc">
-On the other hand, every individual (client_id) is associated with only one account. (You can't learn this from Aircloak: the system administrator has to know it.) Since client_id is a subset of account_id, by protecting the account_id, the client_id is automatically also protected.
+On the other hand, every individual (client_id) is associated with only one account. (You can't learn this from Diffix Elm: the system administrator has to know it.) Since client_id is a subset of account_id, by protecting the account_id, the client_id is automatically also protected.
 ''',
     "dbname": "banking",
+    "mode": "trusted",
     "diffix": {
       "sql": '''
 SHOW columns FROM accounts'''
@@ -1250,6 +1300,7 @@ For example, if a single individual was the only Sci-hub user from a given city,
 While theoretically possible, the likelihood of this is remote.
 ''',
     "dbname": "scihub",
+    "mode": "trusted",
     "diffix": {
       "sql": '''
 SHOW columns FROM sep2015'''
@@ -1265,7 +1316,7 @@ WHERE table_name   = 'sep2015' '''
     "heading": "Subqueries",
     "description": '''
 <p class="desc">
-Aircloak supports subqueries. Subqueries are processed from inner-most to outer-most query. Aircloak may anonymize at the end of the sequence of queries, or may in fact anonymize before the last query in the sequence. Where this happens depends on the query itself.
+Diffix Elm supports subqueries. Subqueries are processed from inner-most to outer-most query. Diffix Elm may anonymize at the end of the sequence of queries, or may in fact anonymize before the last query in the sequence. Where this happens depends on the query itself.
 <p class="desc">
 From these examples you will learn about:
 <ul>
@@ -1281,6 +1332,7 @@ https://demo.aircloak.com/docs/sql.html#query-and-subquery-types
 ">here</a>.
 ''',
     "dbname": "",
+    "mode": "trusted",
     "diffix": {
       "sql": ""
     },
@@ -1299,16 +1351,17 @@ You might compose the query shown here. The subquery counts the number of transa
 ) and the outer query places each acct_date in the appropriate bucket, and counts the number of acct_date's per bucket.
 <p class="desc">
 <font color="red">
-The Aircloak answer here is extremely bad! What happened?
+The Diffix Elm answer here is extremely bad! What happened?
 </font>
 <p class="desc">
 The problem here is that
-the subquery (labeled "ANONYMIZING QUERY") is being anonymized by Aircloak. In other words, Aircloak fully anonymizes the subquery before handing the results of the subquery to the outer query (labeled "STANDARD QUERY" because once the subquery is anonymized, it can subsequently be handled as standard, unrestricted SQL).
+the subquery (labeled "ANONYMIZING QUERY") is being anonymized by Diffix Elm. In other words, Diffix Elm fully anonymizes the subquery before handing the results of the subquery to the outer query (labeled "STANDARD QUERY" because once the subquery is anonymized, it can subsequently be handled as standard, unrestricted SQL).
 <p class="desc">
 The only clue that something might be amiss is the last row of the cloak answer, which indicates that one of the acct_date values has over 500K transactions and appears to be an extreme outlier.
 <p class="desc">
 ''',
     "dbname": "banking",
+    "mode": "trusted",
     "diffix": {
       "sql": '''
 -- STANDARD QUERY
@@ -1352,6 +1405,7 @@ to verify that the suppression has taken place.
 In this case, the 'None' bucket would still exist and so suppression is taking place.
 ''',
     "dbname": "banking",
+    "mode": "trusted",
     "diffix": {
       "sql": '''
 SELECT acct_date, count(*) AS nt
@@ -1373,7 +1427,7 @@ ORDER BY 2 DESC
     "heading": "-&nbsp&nbsp&nbspSmarter query (not?)",
     "description": '''
 <p class="desc">
-Unfortunately it is not clear that it is possible to replicate the bad query using Aircloak.
+Unfortunately it is not clear that it is possible to replicate the bad query using Diffix Elm.
 <p class="desc">
 One alternative, shown here, is to ask a different query, but one that might nevertheless suit the analyst's need. In this query, we have substituted account_id for acct_date.
 <p class="desc">
@@ -1384,9 +1438,10 @@ This is because the subquery (here labeled "RESTRICTED QUERY") is not anonymizin
 <p class="desc">
 The subquery is not anonymizing because it selects the account_id column, which is the unit of protection (the "user_id" type column). As long as the "user_id" type column is selected, it is possible to put off anonymization until later in the query processing.
 <p class="desc">
-Note that, because the outer query is not a standard query, the special Aircloak function bucket() must be used instead of round() to produce the histogram buckets.
+Note that, because the outer query is not a standard query, the special Diffix Elm function bucket() must be used instead of round() to produce the histogram buckets.
 ''',
     "dbname": "banking",
+    "mode": "trusted",
     "diffix": {
       "sql": '''
 -- ANONYMIZING QUERY
@@ -1423,9 +1478,10 @@ The results are substantially more accurate, though some of the relative errors 
 <p class="desc">
 The subquery is anonymizing because the "user_id" type column is not selected. The answers are reasonably accurate, however, because there is no suppression in the subquery: the aggregate in the subquery (acct_district_id) is large enough to avoid suppression.
 <p class="desc">
-The subquery is labeled "RESTRICTED QUERY" because it is not anonymizing, but it is also not standard and so Aircloak SQL restrictions apply.
+The subquery is labeled "RESTRICTED QUERY" because it is not anonymizing, but it is also not standard and so Diffix Elm SQL restrictions apply.
 ''',
     "dbname": "banking",
+    "mode": "trusted",
     "diffix": {
       "sql": '''
 -- STANDARD QUERY
@@ -1463,6 +1519,7 @@ ORDER BY 1
 We are constantly adding new examples, so visit again from time to time!
 ''',
     "dbname": "",
+    "mode": "trusted",
     "diffix": {
       "sql": ""
     },
