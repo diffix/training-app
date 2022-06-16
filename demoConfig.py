@@ -8,7 +8,7 @@ Welcome to the Diffix for PostgreSQL Training App. Use this app to understand th
     <p class="desc">
 For more information, visit the Open Diffix project website at <a target=_blank href="https:/open-diffix.org">open-diffix.org</a>, or contact us at hello@open-diffix.org.''',
     "dbname": "",
-    "mode": "trusted",
+    "mode": "",
     "diffix": {
       "sql": ""
     },
@@ -33,7 +33,7 @@ A series of examples are listed on the left. Each example provides SQL queries f
     In addition to the query results for both Diffix Elm and native queries, the app usually displays the absolute and relative error between the noisy Diffix Elm and correct native answers. The error is not displayed in cases where there is no matching column value between the cloak and the native output for the displayed rows.
     ''',
     "dbname": "",
-    "mode": "trusted",
+    "mode": "",
     "diffix": {
       "sql": ""
     },
@@ -43,9 +43,9 @@ A series of examples are listed on the left. Each example provides SQL queries f
   },
   {
     "heading": "Schema exploration",
-    "description": '''<p class="desc">Diffix Elm provides MySQL-like commands for exploring the schema.''',
+    "description": '''<p class="desc">The PostgreSQL commands for listing tables and columns work in Diffix Elm.''',
     "dbname": "",
-    "mode": "trusted",
+    "mode": "",
     "diffix": {
       "sql": ""
     },
@@ -54,7 +54,7 @@ A series of examples are listed on the left. Each example provides SQL queries f
     }
   },
   {
-    "heading": "Show tables",
+    "heading": "TODO: Show tables",
     "description": '''
 <p class="desc">
 Diffix Elm accepts the MySQL "SHOW tables" command.
@@ -79,11 +79,12 @@ schemaname != 'information_schema';
 SELECT table_name
 FROM information_schema.tables
 WHERE table_schema='public'
-AND table_catalog='banking' '''
+AND table_catalog='banking'
+'''
     }
   },
   {
-    "heading": "Show columns",
+    "heading": "TODO: Show columns",
     "description": '''
 <p class="desc">
 Diffix Elm accepts the MySQL "SHOW columns FROM table" command.
@@ -125,9 +126,11 @@ WHERE table_name   = 'accounts' '''
   },
   {
     "heading": "Basic queries",
-    "description": '''<p class="desc">Listed here are a few of the most basic queries that can be executed with Diffix Elm.''',
+    "description": '''<p class="desc">
+    Diffix Elm allows a small but powerful subset of SQL. Diffix Elm allows analysts to build multi-column histograms of counts with generalization.
+    ''',
     "dbname": "",
-    "mode": "trusted",
+    "mode": "",
     "diffix": {
       "sql": ""
     },
@@ -136,8 +139,11 @@ WHERE table_name   = 'accounts' '''
     }
   },
   {
-    "heading": "Counting users",
-    "description": '''<p class="desc">Count the number of bank accounts.''',
+    "heading": "Counting protected entities",
+    "description": '''
+        <p class="desc">Count the number of bank accounts.
+        <p class="desc">Count the number of bank accounts.
+        ''',
     "dbname": "banking",
     "mode": "trusted",
     "diffix": {
@@ -345,7 +351,7 @@ ORDER BY 1
 SELECT * FROM table LIMIT X
 ''',
     "dbname": "",
-    "mode": "trusted",
+    "mode": "",
     "diffix": {
       "sql": ""
     },
@@ -406,7 +412,7 @@ https://demo.aircloak.com/docs/sql/query-results.html#zero-mean-noise
 ">here</a>.
 ''',
     "dbname": "",
-    "mode": "trusted",
+    "mode": "",
     "diffix": {
       "sql": ""
     },
@@ -605,7 +611,7 @@ https://demo.aircloak.com/docs/sql/query-results.html#low-count-filtering
 ">here</a>.
 ''',
     "dbname": "",
-    "mode": "trusted",
+    "mode": "",
     "diffix": {
       "sql": ""
     },
@@ -879,7 +885,7 @@ Here we provide a couple examples.
 <b>Bottom line: Avoid answers with very few distinct users</b>
 ''',
     "dbname": "",
-    "mode": "trusted",
+    "mode": "",
     "diffix": {
       "sql": ""
     },
@@ -961,7 +967,7 @@ Besides distorting answers with noise and suppression, Diffix Elm places a numbe
 One class of limitations are those placed on inequalities in conditions.
 ''',
     "dbname": "",
-    "mode": "trusted",
+    "mode": "",
     "diffix": {
       "sql": ""
     },
@@ -1332,7 +1338,7 @@ https://demo.aircloak.com/docs/sql.html#query-and-subquery-types
 ">here</a>.
 ''',
     "dbname": "",
-    "mode": "trusted",
+    "mode": "",
     "diffix": {
       "sql": ""
     },
@@ -1519,7 +1525,7 @@ ORDER BY 1
 We are constantly adding new examples, so visit again from time to time!
 ''',
     "dbname": "",
-    "mode": "trusted",
+    "mode": "",
     "diffix": {
       "sql": ""
     },
