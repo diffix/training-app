@@ -8,7 +8,7 @@ Welcome to the Diffix for PostgreSQL Training App. Use this app to understand th
     <p class="desc">
 For more information, visit the Open Diffix project website at <a target=_blank href="https:/open-diffix.org">open-diffix.org</a>, or contact us at hello@open-diffix.org.''',
     "dbname": "",
-    "mode": "",
+    "mode": "trusted",
     "diffix": {
       "sql": ""
     },
@@ -26,14 +26,14 @@ A series of examples are listed on the left. Each example provides SQL queries f
     <p class="desc">
     The app displays the results of a cached query. Click "Run" to re-execute the query for both Diffix Elm and native, or to execute any changes you make to the SQL.
     <p class="desc">
-    This app has access to several different databases; <a target=_blank href="https://www.gda-score.org/resources/databases/czech-banking-data/">banking</a>, <a target=_blank href="https://www.gda-score.org/resources/databases/usa-census-database/">census0</a>, <a target=_blank href="https://www.gda-score.org/resources/databases/database-2/">scihub</a>, and <a target=_blank href="https://www.gda-score.org/resources/databases/database-1/">taxi</a>. You must select the appropriate database from the pull-down menu if you write a query.
+    This app has access to several different databases; <a target=_blank href="https://www.gda-score.org/resources/databases/czech-banking-data/">banking</a>, <a target=_blank href="https://www.gda-score.org/resources/databases/usa-census-database/">census</a>, <a target=_blank href="https://www.gda-score.org/resources/databases/database-2/">scihub</a>, and <a target=_blank href="https://www.gda-score.org/resources/databases/database-1/">taxi</a>. You must select the appropriate database from the pull-down menu if you write a query.
     <p class="desc">
     The app indicates how many rows are in each answer, and the query execution time for each. However, the app displays only the first 100 rows of data
     <p class="desc">
     In addition to the query results for both Diffix Elm and native queries, the app usually displays the absolute and relative error between the noisy Diffix Elm and correct native answers. The error is not displayed in cases where there is no matching column value between the cloak and the native output for the displayed rows.
     ''',
     "dbname": "",
-    "mode": "",
+    "mode": "trusted",
     "diffix": {
       "sql": ""
     },
@@ -45,7 +45,7 @@ A series of examples are listed on the left. Each example provides SQL queries f
     "heading": "Schema exploration",
     "description": '''<p class="desc">The PostgreSQL commands for listing tables and columns work in Diffix Elm.''',
     "dbname": "",
-    "mode": "",
+    "mode": "trusted",
     "diffix": {
       "sql": ""
     },
@@ -68,18 +68,18 @@ personal or non-personal</a>. Non-personal tables contain no user-specific data 
     "mode": "trusted",
     "diffix": {
       "sql": '''
-SELECT *
+SELECT tablename
 FROM pg_catalog.pg_tables
 WHERE schemaname != 'pg_catalog' AND 
-schemaname != 'information_schema';
+    schemaname != 'information_schema';
 '''
     },
     "native": {
       "sql": '''
-SELECT table_name
-FROM information_schema.tables
-WHERE table_schema='public'
-AND table_catalog='banking'
+SELECT tablename
+FROM pg_catalog.pg_tables
+WHERE schemaname != 'pg_catalog' AND 
+    schemaname != 'information_schema';
 '''
     }
   },
@@ -127,10 +127,10 @@ WHERE table_name   = 'accounts' '''
   {
     "heading": "Basic queries",
     "description": '''<p class="desc">
-    Diffix Elm allows a small but powerful subset of SQL. Diffix Elm allows analysts to build multi-column histograms of counts with generalization.
+    Diffix Elm allows a tiny but useful subset of SQL. Diffix Elm allows analysts to build multi-column histograms of counts with generalization.
     ''',
     "dbname": "",
-    "mode": "",
+    "mode": "trusted",
     "diffix": {
       "sql": ""
     },
@@ -139,9 +139,8 @@ WHERE table_name   = 'accounts' '''
     }
   },
   {
-    "heading": "Counting protected entities",
+    "heading": "Counting distinct values",
     "description": '''
-        <p class="desc">Count the number of bank accounts.
         <p class="desc">Count the number of bank accounts.
         ''',
     "dbname": "banking",
@@ -158,7 +157,7 @@ FROM accounts'''
     }
   },
   {
-    "heading": "Counting rows",
+    "heading": "Counting events (in time series data)",
     "description": '''<p class="desc">Count the number of rides in the taxi database (one ride per row).''',
     "dbname": "taxi",
     "mode": "trusted",
@@ -174,34 +173,13 @@ FROM jan08'''
     }
   },
   {
-    "heading": "Counting distinct values",
-    "description": '''
-<p class="desc">
-Count the number of different countries from which SciHub downloads took place.
-<p class="desc">
-<font color="red"> Note that this query takes ten seconds or so</font>
-''',
-    "dbname": "scihub",
-    "mode": "trusted",
-    "diffix": {
-      "sql": '''
-SELECT count(DISTINCT country)
-FROM sep2015'''
-    },
-    "native": {
-      "sql": '''
-SELECT count(DISTINCT country)
-FROM sep2015'''
-    }
-  },
-  {
-    "heading": "Histogram",
-    "description": '''<p class="desc">Count the number of customers in each CLI District.''',
+    "heading": "Histogram of values",
+    "description": '''<p class="desc">Count the number of clients in each Client District.''',
     "dbname": "banking",
     "mode": "trusted",
     "diffix": {
       "sql": '''
-SELECT cli_district_id AS cli,
+SELECT cli_district_id AS district,
        count(DISTINCT client_id)
 FROM accounts
 GROUP BY 1
@@ -209,7 +187,7 @@ ORDER BY 1'''
     },
     "native": {
       "sql": '''
-SELECT cli_district_id AS cli,
+SELECT cli_district_id AS district,
        count(DISTINCT client_id)
 FROM accounts
 GROUP BY 1
@@ -228,7 +206,7 @@ Histogram of counts of individuals by number of marriages per 5-year age group.
     "mode": "trusted",
     "diffix": {
       "sql": '''
-SELECT bucket(age by 5) AS age, 
+SELECT diffix.floor_by(age,5) AS age, 
        marrno AS marriages,
        count(*)
 FROM uidperhousehold
@@ -248,48 +226,29 @@ ORDER BY 1,2
     }
   },
   {
-    "heading": "Sum",
-    "description": '''<p class="desc">The total sum of all transaction amounts.
-    <p class="desc">Diffix Elm also supports min, max, median, average, stddev, and variance. Try modifying the query for these different aggregates.''',
+    "heading": "Subqueries",
+    "description": '''<p class="desc">Average number of transactions per account.''',
     "dbname": "banking",
     "mode": "trusted",
     "diffix": {
       "sql": '''
-SELECT sum(amount)
-FROM transactions'''
+SELECT trans / accounts AS average
+FROM (
+  SELECT count(*) AS trans,
+    count(DISTINCT account_id) AS accounts
+  FROM transactions
+) t
+'''
     },
     "native": {
       "sql": '''
-SELECT sum(amount)
-FROM transactions'''
-    }
-  },
-  {
-    "heading": "GROUP BY / nested SELECT",
-    "description": '''<p class="desc">Builds a histogram of the number of users with different total transaction amounts.''',
-    "dbname": "banking",
-    "mode": "trusted",
-    "diffix": {
-      "sql": '''
-SELECT bucket(sums by 20000) AS amount,
-       count(*)
-FROM (SELECT account_id,
-             sum(amount) AS sums
-      FROM transactions
-      GROUP BY 1) t
-GROUP BY 1
-ORDER BY 1'''
-    },
-    "native": {
-      "sql": '''
-SELECT floor(sums/20000)*20000 AS amount,
-       count(*)
-FROM (SELECT account_id,
-             sum(amount) AS sums
-      FROM transactions
-      GROUP BY 1) t
-GROUP BY 1
-ORDER BY 1'''
+SELECT trans / accounts AS average
+FROM (
+  SELECT count(*) AS trans,
+    count(DISTINCT account_id) AS accounts
+  FROM transactions
+) t
+'''
     }
   },
   {
@@ -351,7 +310,7 @@ ORDER BY 1
 SELECT * FROM table LIMIT X
 ''',
     "dbname": "",
-    "mode": "",
+    "mode": "trusted",
     "diffix": {
       "sql": ""
     },
@@ -412,7 +371,7 @@ https://demo.aircloak.com/docs/sql/query-results.html#zero-mean-noise
 ">here</a>.
 ''',
     "dbname": "",
-    "mode": "",
+    "mode": "trusted",
     "diffix": {
       "sql": ""
     },
@@ -611,7 +570,7 @@ https://demo.aircloak.com/docs/sql/query-results.html#low-count-filtering
 ">here</a>.
 ''',
     "dbname": "",
-    "mode": "",
+    "mode": "trusted",
     "diffix": {
       "sql": ""
     },
@@ -885,7 +844,7 @@ Here we provide a couple examples.
 <b>Bottom line: Avoid answers with very few distinct users</b>
 ''',
     "dbname": "",
-    "mode": "",
+    "mode": "trusted",
     "diffix": {
       "sql": ""
     },
@@ -967,7 +926,7 @@ Besides distorting answers with noise and suppression, Diffix Elm places a numbe
 One class of limitations are those placed on inequalities in conditions.
 ''',
     "dbname": "",
-    "mode": "",
+    "mode": "trusted",
     "diffix": {
       "sql": ""
     },
@@ -1338,7 +1297,7 @@ https://demo.aircloak.com/docs/sql.html#query-and-subquery-types
 ">here</a>.
 ''',
     "dbname": "",
-    "mode": "",
+    "mode": "trusted",
     "diffix": {
       "sql": ""
     },
@@ -1525,7 +1484,7 @@ ORDER BY 1
 We are constantly adding new examples, so visit again from time to time!
 ''',
     "dbname": "",
-    "mode": "",
+    "mode": "trusted",
     "diffix": {
       "sql": ""
     },

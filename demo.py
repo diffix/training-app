@@ -23,18 +23,18 @@ pp = pprint.PrettyPrinter(indent=4)
 PORT (defaults to 8080)
 DATA_DIR (holds the database 'training.db', defaults to .)
 LOG_DIR (holds the log file 'training.log', defaults to .)
-NATIVE_USER (user name for native postgres, defaults to 'direct-user'
-NATIVE_PASS (password for native postgres, no default)
+NATIVE_USER (user name for native postgres, defaults to 'direct_user'
+NATIVE_PASS (password for native postgres, defaults to 'demo')
 NATIVE_PORT (defaults to 5432)
 NATIVE_HOST (defaults to db001.gda-score.org)
 TRUSTED_USER (user name for diffix postgres, defaults to 'trusted_user'
-TRUSTED_PASS (password for diffix postgres, no default)
+TRUSTED_PASS (password for diffix postgres, defaults to 'demo')
 TRUSTED_PORT (defaults to NATIVE_PORT)
-TRUSTED_HOST (defaults to demo-pg.open-diffix.org)
+TRUSTED_HOST (defaults to db001.gda-score.org)
 UNTRUSTED_USER (user name for diffix postgres, defaults to 'untrusted_user'
-UNTRUSTED_PASS (password for diffix postgres, no default)
+UNTRUSTED_PASS (password for diffix postgres, defaults to 'demo')
 UNTRUSTED_PORT (defaults to NATIVE_PORT)
-UNTRUSTED_HOST (defaults to demo-pg.open-diffix.org)
+UNTRUSTED_HOST (defaults to db001.gda-score.org)
 '''
 
 
@@ -137,22 +137,22 @@ ss = {
     'dbPath' : '',
     'logPath' : '',
     'native': {
-        'host': 'demo-pg.open-diffix.org',
+        'host': 'db001.gda-score.org',
         'port': 5432,
-        'user': 'direct-user',
-        'password': '',
+        'user': 'direct_user',
+        'password': 'demo',
     },
     'trusted': {
-        'host': 'demo-pg.open-diffix.org',
+        'host': 'db001.gda-score.org',
         'port': 5432,
         'user': 'trusted_user',
-        'password': '',
+        'password': 'demo',
     },
     'untrusted': {
-        'host': 'demo-pg.open-diffix.org',
+        'host': 'db001.gda-score.org',
         'port': 5432,
         'user': 'untrusted_user',
-        'password': '',
+        'password': 'demo',
     },
 }
 
@@ -1056,10 +1056,8 @@ def getEnvVars():
     if env is not None:
         ss['native']['user'] = env
     env = os.environ.get('NATIVE_PASS')
-    if env is None:
-        print("Must set environment variable NATIVE_PASS")
-        quit()
-    ss['native']['password'] = env
+    if env is not None:
+        ss['native']['password'] = env
     env = os.environ.get('NATIVE_PORT')
     if env is not None:
         ss['native']['port'] = int(env)
@@ -1070,10 +1068,8 @@ def getEnvVars():
     if env is not None:
         ss['trusted']['user'] = env
     env = os.environ.get('TRUSTED_PASS')
-    if env is None:
-        print("Must set environment variable TRUSTED_PASS")
-        quit()
-    ss['trusted']['password'] = env
+    if env is not None:
+        ss['trusted']['password'] = env
     env = os.environ.get('TRUSTED_PORT')
     if env is not None:
         ss['trusted']['port'] = env
@@ -1084,10 +1080,8 @@ def getEnvVars():
     if env is not None:
         ss['untrusted']['user'] = env
     env = os.environ.get('UNTRUSTED_PASS')
-    if env is None:
-        print("Must set environment variable UNTRUSTED_PASS")
-        quit()
-    ss['untrusted']['password'] = env
+    if env is not None:
+        ss['untrusted']['password'] = env
     env = os.environ.get('UNTRUSTED_PORT')
     if env is not None:
         ss['untrusted']['port'] = env
