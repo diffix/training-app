@@ -64,16 +64,9 @@ tabWid = dbParWd
 descWd = descParWd - (3 * gap)
 descHt = pRightDescHt - gap
 listWd = listParWd - (2 * margin)
-#queryWd = dbParWd + (2 * margin)
-queryWd = dbParWd
-#zzzz
-spaceWd = queryWd - 1.2
+queryWd = dbParWd + (2 * margin)
+spaceWd = queryWd - 1.6
 resultsWd = dbParWd - (2 * margin)
-
-rightArrowLeft = queryWd
-leftArrowLeft = queryWd - (1.5 * gap)
-rightArrowTop = queryHt/2
-leftArrowTop = queryHt/1.2
 
 # Layout parameters consent page
 consentParHt = 10
@@ -373,26 +366,6 @@ def makeHtml():
       width: {logoWd}cm;
       vertical-align:top;
     }}
-    .arrow-button-right {{
-      color: black;
-      position: relative;
-      left: {rightArrowLeft}cm;
-      top: {rightArrowTop}cm;
-      background-color: white;
-      border-style: none;
-      font-size: 24px;
-      font-weight: bold;
-    }}
-    .arrow-button-left {{
-      color: black;
-      position: relative;
-      left: {leftArrowLeft}cm;
-      top: {leftArrowTop}cm;
-      background-color: white;
-      border-style: none;
-      font-size: 24px;
-      font-weight: bold;
-    }}
     .button {{
       border: none;
       font-size: 20;
@@ -400,14 +373,14 @@ def makeHtml():
       border-radius: 8px;
       box-shadow: 0 4px #999;
     }}
-    .button:hover {{background-color: DarkGreen}}
+    .button:hover {{background-color: #0000FF}}
     .button:active {{
       background-color: #0000FF;
       box-shadow: 0 5px #666;
       transform: translateY(4px);
     }}
     .button-run {{
-      background-color: #39C629;
+      background-color: #3498DB;
       color: white;
     }}
     .button-cancel {{
@@ -532,12 +505,6 @@ def makeHtml():
           <div class="desc-box">{s['description']}</div>
         </div>
         <div class="par-right-queries">
-            <button class="arrow-button-right" type="submit">
-              &#62;
-            </button>
-            <button class="arrow-button-left" type="submit">
-              &#60;
-            </button>
             <br>
             Diffix SQL
             <span style="display:inline-block; width: {spaceWd}cm;"></span>
@@ -546,19 +513,19 @@ def makeHtml():
               enctype="multipart/form-data">
               <textarea class="ta-diffix" name = "diffix"
                   wrap="hard">{s[diffixSys]['sql']}</textarea>
-              &nbsp; &nbsp; &nbsp;
+              &nbsp; &nbsp;
               <textarea class="ta-native" name = "native"
                   wrap="hard">{s['native']['sql']}</textarea>
                <br>
-               <button class="button button-run" type="submit">
-                 Run
-               </button>
-               &nbsp&nbsp&nbsp&nbsp
-               &nbsp&nbsp&nbsp&nbsp
                Database:{s['dbHtml']}
                &nbsp&nbsp&nbsp&nbsp
                &nbsp&nbsp&nbsp&nbsp
                Trust Mode:{s['modeHtml']}
+               &nbsp&nbsp&nbsp&nbsp
+               &nbsp&nbsp&nbsp&nbsp
+               <button class="button button-run" type="submit">
+                 Run
+               </button>
             </form>
         </div>
         <div class="par-right-answers">
@@ -682,8 +649,7 @@ def computeErrors():
 def makeAnswerHtml(sys):
     user = getCookie()
     s = loadUserState(user)
-    html = "<br>"
-    html += f'''{s[sys]['numRows']} rows in {s[sys]['duration']} seconds'''
+    html = f'''{s[sys]['numRows']} rows in {s[sys]['duration']} seconds'''
     if s[sys]['cached'] is True:
         html += ''' (Cached result)<br>'''
     else:
