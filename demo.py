@@ -451,12 +451,10 @@ def makeHtml():
     }}
     td.error {{
       font-size: 14px;
-      border-bottom: 1px solid #99e600;
       background-color: #ffcccc;
       text-overflow: clipped;
       border-left: 2px solid black;
       border-bottom: 1px solid #e60000;
-      border-top: 1px solid #e60000;
     }}
     th.trusted {{
       white-space: wrap;
@@ -627,21 +625,30 @@ def computeErrors():
         if key in diffixDict:
             cVal = diffixDict[key]
             nVal = row[measureIndex]
-            if is_number(row[measureIndex]) is False:
+            if is_number(nVal) is False:
                 return
-            absError = round((nVal - cVal),2)
-            maxVal = max([abs(nVal),abs(cVal)])
+            if is_number(cVal) is False:
+                return
+            # The following needed to deal with cases where one of these
+            # is decimal.Decimal and the other is float. This would barf
+            # on the `-` operation below
+            if (isinstance(nVal,int) is False or isinstance(cVal,int) is False):
+                cVal = float(cVal)
+                nVal = float(nVal)
+            absError = round((cVal - nVal),2)
+            maxVal = max([abs(cVal),abs(nVal)])
             if maxVal == 0:
                 relError = '---'
             else:
-                relError = round((abs(nVal-cVal) / maxVal)*100,2)
-            newRow.append(f'''{absError}, {relError}%''')
+                #relError = round((abs(cVal-nVal) / maxVal)*100,2)
+                relError = round(((cVal-nVal) / maxVal)*100,2)
+            newRow.append(f'''{absError} : {relError}%''')
         else:
             newRow.append('')
         newAns.append(newRow)
     # Now add new column to native table
     colInfo = list(s['native']['colInfo'])
-    colInfo.append('abs,rel')
+    colInfo.append('abs : rel')
     s['native']['colInfo'] = colInfo
     s['native']['ans'] = newAns
     return
@@ -667,7 +674,7 @@ def makeAnswerHtml(sys):
     html += f'''<table class="{sys}">'''
     html += '''<tr>'''
     for col in s[sys]['colInfo']:
-        if col == 'abs,rel':
+        if col == 'abs : rel':
             html += f'''<th class="error">{col}</th>'''
         else:
             html += f'''<th class="{sys}">{col}</th>'''
@@ -676,7 +683,7 @@ def makeAnswerHtml(sys):
         html += '''<tr>'''
         for i in range(len(row)):
             val = row[i]
-            if s[sys]['colInfo'][i] == 'abs,rel':
+            if s[sys]['colInfo'][i] == 'abs : rel':
                 html += f'''<td class="error">{val}</td>'''
             else:
                 html += f'''<td class="{sys}">{val}</td>'''
