@@ -582,6 +582,8 @@ def makeExamplesHtml():
     return
 
 def is_number(s):
+    if s is None:
+        return False
     try:
         float(s)
         return True
