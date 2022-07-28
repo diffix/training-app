@@ -978,24 +978,26 @@ The microdata produced by pg_diffix tracks the original data very closely. The o
     "mode": "trusted",
     "diffix": {
       "sql": '''
-SELECT act, dur
+SELECT act_d, dur_d
 FROM (
-  SELECT acct_district_id AS act,
-         duration AS dur
+  SELECT acct_district_id AS act_d,
+         duration AS dur_d
   FROM loans
 ) t
-WHERE act IN (1,52,54) AND dur = 60
+WHERE act_d IN (1,52,54) AND dur_d = 60
+ORDER BY 1,2
 '''
     },
     "native": {
       "sql": '''
-SELECT act, dur
+SELECT act_n, dur_n
 FROM (
-  SELECT acct_district_id AS act,
-         duration AS dur
+  SELECT acct_district_id AS act_n,
+         duration AS dur_n
   FROM loans
 ) t
-WHERE act IN (1,52,54) AND dur = 60
+WHERE act_n IN (1,52,54) AND dur_n = 60
+ORDER BY 1,2
 '''
     }
   },
@@ -1003,17 +1005,26 @@ WHERE act IN (1,52,54) AND dur = 60
     "heading": "Synthetic data",
     "description": '''
 <p class="desc">
-zzzz
+pg_diffix can be used to generate statistically accurate synthetic data.
+<p class="desc">
+This query generates synthetic data that captures the correlation between transaction amount and balance. The round_by() aggregate ensures that there is a minimal amount of suppression.
+<p class="desc">
+Note that LIMIT and OFFSET are used here to show a "window" of values in an otherwise much larger dataset (roughly 1.2M rows). The rows shown for Diffix and native are not meant to perfectly line up 1-to-1.
 ''',
     "dbname": "banking0",
     "mode": "trusted",
     "diffix": {
       "sql": '''
-SELECT diffix.round_by(amount,1000) AS amt,
-       diffix.round_by(balance,1000) AS bal
-FROM transactions
-ORDER BY 1 DESC, 2 DESC
-LIMIT 100
+SELECT amt, bal
+FROM (
+  SELECT diffix.round_by(amount,1000)
+           AS amt,
+         diffix.round_by(balance,1000)
+           AS bal
+  FROM transactions
+  ORDER BY 1 DESC,2 DESC
+) t
+LIMIT 100 OFFSET 100000
 '''
     },
     "native": {
@@ -1021,22 +1032,353 @@ LIMIT 100
 SELECT amount AS amt,
        balance AS bal
 FROM transactions
-ORDER BY 1 DESC, 2 DESC
-LIMIT 100
+ORDER BY 1 DESC,2 DESC
+LIMIT 100 OFFSET 100000
 '''
+    }
+  },
+  {
+    "heading": "Statistics (1-column)",
+    "description": '''
+<p class="desc">
+Given the ability to generate microdata, we can run all kinds of statistical functions on that data. Some of these are offered by PostgreSQL, and can be run as post-processing. Alternatively, one could import the microdata into a variety of programming tools with statistics packages such as R or Python. 
+<p class="desc">
+This section highlights PostgreSQL statistics tools that operate on a single column.
+''',
+    "dbname": '',
+    "mode": "trusted",
+    "diffix": {
+      "sql": ''
+    },
+    "native": {
+      "sql": ''
+    }
+  },
+  {
+    "heading": "Measuring suppression",
+    "description": '''
+<p class="desc">
+To produce high-quality microdata, we want to minimize suppression while maximizing precision through small bin widths.
+<p class="desc">
+This query presents a simple way to measure the amount of data lost through suppression. We can increase or decrease the amount of suppression by shrinking or growing the round_by amount. Here we see that less than 1/10 of 1% of the data is suppressed using a bin size of 100.
+<p class="desc">
+Note that this query assumes that suppressed bins are assigned a value of NULL. It is possible to configure a different value. The amount columns has no native NULL values (as demonstrated by the query on the right), and so using NULL to identify suppressed bins works well in this case.
+''',
+    "dbname": 'banking0',
+    "mode": "trusted",
+    "diffix": {
+      "sql": '''
+SELECT round(100*((count(*)-sum(status))/count(*)::numeric),2)
+         AS percent_suppressed
+FROM (
+  SELECT CASE
+        WHEN amount IS NULL THEN 0
+        ELSE 1
+        END AS status
+  FROM (
+    SELECT diffix.round_by(amount,100)
+          AS amount
+    FROM transactions
+  ) t1
+) t2
+      '''
+    },
+    "native": {
+      "sql": '''
+SELECT count(*) as number_of_NULL_values
+FROM transactions
+WHERE amount IS NULL
+      '''
+    }
+  },
+  {
+    "heading": "Percentile",
+    "description": '''
+<p class="desc">
+The PostgreSQL PERCENTILE_CONT() function can compute any percentile.
+<p class="desc">
+This query computes the median of all transaction amounts. The basis for computing the PERCENTILE_CONT() function is the microdata from bin sizes of 100.
+<p class="desc">
+The noisy median is off by about 5%.
+''',
+    "dbname": 'banking0',
+    "mode": "trusted",
+    "diffix": {
+      "sql": '''
+SELECT PERCENTILE_CONT(0.5) WITHIN 
+GROUP(ORDER BY amount)
+FROM (
+  SELECT diffix.round_by(amount,100)
+         AS amount
+  FROM transactions
+) t
+      '''
+    },
+    "native": {
+      "sql": '''
+SELECT PERCENTILE_CONT(0.5) WITHIN 
+GROUP(ORDER BY amount)
+FROM transactions
+      '''
+    }
+  },
+  {
+    "heading": "Max",
+    "description": '''
+<p class="desc">
+To compute max, we use diffix.ceil_by instead of diffix.round_by, because the Diffix estimate will tend to under-estimate the true max because high values tend to be sparse and therefore suppressed. We also used larger bins (1000 instead of 100) because this produced a higher value. Even so, the estimated max is off by roughly 10%.
+<p class="desc">
+In general, distortion is high for max because Diffix tends to hide outlier values.
+''',
+    "dbname": 'banking0',
+    "mode": "trusted",
+    "diffix": {
+      "sql": '''
+SELECT PERCENTILE_CONT(1.0) WITHIN 
+GROUP(ORDER BY amount)
+FROM (
+  SELECT diffix.ceil_by(amount,1000)
+         AS amount
+  FROM transactions
+) t
+      '''
+    },
+    "native": {
+      "sql": '''
+SELECT PERCENTILE_CONT(1.0) WITHIN 
+GROUP(ORDER BY amount)
+FROM transactions
+      '''
+    }
+  },
+  {
+    "heading": "Min",
+    "description": '''
+<p class="desc">
+To compute max, we use diffix.floor_by instead of diffix.round_by. Diffix produces an exact answer in this case because a large number of accounts have transactions with amount 0.0. (Note that Max can also produce an exact answer when a large number of individuals share the maximum value.)
+''',
+    "dbname": 'banking0',
+    "mode": "trusted",
+    "diffix": {
+      "sql": '''
+SELECT PERCENTILE_CONT(0.0) WITHIN 
+GROUP(ORDER BY amount)
+FROM (
+  SELECT diffix.floor_by(amount,100)
+         AS amount
+  FROM transactions
+) t
+      '''
+    },
+    "native": {
+      "sql": '''
+SELECT PERCENTILE_CONT(0.0) WITHIN 
+GROUP(ORDER BY amount)
+FROM transactions
+      '''
+    }
+  },
+  {
+    "heading": "Standard deviation",
+    "description": '''
+<p class="desc">
+Standard deviation is well within 10% of the true value.
+''',
+    "dbname": 'banking0',
+    "mode": "trusted",
+    "diffix": {
+      "sql": '''
+SELECT stddev(amount)
+FROM (
+  SELECT diffix.floor_by(amount,100)
+         AS amount
+  FROM transactions
+) t
+      '''
+    },
+    "native": {
+      "sql": '''
+SELECT stddev(amount)
+FROM transactions
+      '''
+    }
+  },
+  {
+    "heading": "Statistics (2-column)",
+    "description": '''
+<p class="desc">
+This section highlights PostgreSQL statistics tools that operate on column pairs.
+''',
+    "dbname": '',
+    "mode": "trusted",
+    "diffix": {
+      "sql": ''
+    },
+    "native": {
+      "sql": ''
+    }
+  },
+  {
+    "heading": "Measuring suppression",
+    "description": '''
+<p class="desc">
+This measures suppression for two columns (here assuming both return NULL for suppressed rows). Suppression is less than 1%, so we'll assume that this is good enough (though this needs to be studied).
+''',
+    "dbname": 'banking0',
+    "mode": "trusted",
+    "diffix": {
+      "sql": '''
+SELECT round(100*((count(*)-sum(status))/count(*)::numeric),2)
+         AS percent_suppressed
+FROM (
+  SELECT CASE
+        WHEN amount IS NULL AND
+             balance IS NULL
+        THEN 0
+        ELSE 1
+        END AS status
+  FROM (
+    SELECT diffix.round_by(amount,1000)
+              AS amount,
+           diffix.round_by(balance,1000)
+              AS balance
+    FROM transactions
+  ) t1
+) t2
+      '''
+    },
+    "native": {
+      "sql": '''
+SELECT count(*) as number_of_NULL_rows
+FROM transactions
+WHERE amount IS NULL AND
+      balance IS NULL
+      '''
+    }
+  },
+  {
+    "heading": "Correlation coefficient",
+    "description": '''
+<p class="desc">
+The PostgreSQL corr() function implements the Pearson Correlation Coefficient. This returns a real value between -1 and 1. The higher the absolute value of the value, the stronger the correlation (positive or negative). Zero means no correlation whatsoever.
+<p class="desc">
+The pg_diffix estimate of the correlation is off by about 5%. Both it and the true value suggest a weak to moderate correlation between amount and balance.
+''',
+    "dbname": 'banking0',
+    "mode": "trusted",
+    "diffix": {
+      "sql": '''
+SELECT corr(amount,balance)
+FROM (
+  SELECT diffix.round_by(amount,1000)
+            AS amount,
+          diffix.round_by(balance,1000)
+            AS balance
+  FROM transactions
+) t
+      '''
+    },
+    "native": {
+      "sql": '''
+SELECT corr(amount,balance)
+FROM transactions
+      '''
+    }
+  },
+  {
+    "heading": "Covariance",
+    "description": '''
+<p class="desc">
+The PostgreSQL covar_pop() function implements the Population Covariance. It returns a real value between plus and minus infinity. It is not scale free.
+<p class="desc">
+The pg_diffix estimate of the covariance is off by about 20%.
+''',
+    "dbname": 'banking0',
+    "mode": "trusted",
+    "diffix": {
+      "sql": '''
+SELECT covar_pop(amount,balance)
+FROM (
+  SELECT diffix.round_by(amount,1000)
+            AS amount,
+          diffix.round_by(balance,1000)
+            AS balance
+  FROM transactions
+) t
+      '''
+    },
+    "native": {
+      "sql": '''
+SELECT covar_pop(amount,balance)
+FROM transactions
+      '''
+    }
+  },
+  {
+    "heading": "Least squares fit (y-intercept)",
+    "description": '''
+<p class="desc">
+The PostgreSQL regr_intercept(X,Y) function returns y-intercept of the least-squares-fit linear equation determined by the (X,Y) pairs.
+<p class="desc">
+The pg_diffix estimate of the y-intercept is off by slightly over 20%.
+''',
+    "dbname": 'banking0',
+    "mode": "trusted",
+    "diffix": {
+      "sql": '''
+SELECT regr_intercept(amount,balance)
+FROM (
+  SELECT diffix.round_by(amount,1000)
+            AS amount,
+          diffix.round_by(balance,1000)
+            AS balance
+  FROM transactions
+) t
+      '''
+    },
+    "native": {
+      "sql": '''
+SELECT regr_intercept(amount,balance)
+FROM transactions
+      '''
+    }
+  },
+  {
+    "heading": "Least squares fit (slope)",
+    "description": '''
+<p class="desc">
+The PostgreSQL regr_slope(X,Y) function returns slope of the least-squares-fit linear equation determined by the (X,Y) pairs.
+<p class="desc">
+The pg_diffix estimate of the slope is off by around 10%.
+''',
+    "dbname": 'banking0',
+    "mode": "trusted",
+    "diffix": {
+      "sql": '''
+SELECT regr_slope(amount,balance)
+FROM (
+  SELECT diffix.round_by(amount,1000)
+            AS amount,
+          diffix.round_by(balance,1000)
+            AS balance
+  FROM transactions
+) t
+      '''
+    },
+    "native": {
+      "sql": '''
+SELECT regr_slope(amount,balance)
+FROM transactions
+      '''
     }
   },
   {
     "heading": "Noise",
     "description": '''
 <p class="desc">
-pg_diffix adds noise to answers. The following set of examples illustrate how noise is added and potential pitfalls.
+Part 1 of this training app gives examples of proportional sticky noise.
 <p class="desc">
-The following examples are best selected in order.
-Read more 
-<a target=_blank href="
-https://www.open-diffix.org/blog/diffix-elm-automates-what-statistics-offices-have-been-doing-for-decades
-">here</a>.
+Here we describe how pg_diffix zzzz
 ''',
     "dbname": "",
     "mode": "trusted",
@@ -1048,19 +1390,22 @@ https://www.open-diffix.org/blog/diffix-elm-automates-what-statistics-offices-ha
     }
   },
   {
-    "heading": "Sticky noise",
+    "heading": "Noise magnitude",
     "description": '''
 <p class="desc">
-pg_diffix has a unique way of adding noise which we call "sticky noise".  Sticky means that the same query produces the same noise. Try re-running this query, and you will see that you get the same noisy answer every time.
+When different protected entities contribute different amounts to an aggregate (i.e. more rows if count(*)), pg_diffix adds proportionally more noise. It is helpful to the analyst to know how much noise is being added.
 <p class="desc">
-Note that the absolute noise (the "abs" column in red) is relatively small; rarely more than plus or minus 5. This is always the case when counting persons (the protected entity).
+pg_diffix provides several functions that convey the standard deviation of the noise. They have the format 'aggr_noise()', where 'aggr' is 'count', 'sum', or 'avg'.
+<p class="desc">
+This example counts banking clients, which are protected entities. Since each client contributes only one to the count, the noise magnitude is small (SD=1) and the same for every bin.
 ''',
     "dbname": "banking0",
     "mode": "trusted",
     "diffix": {
       "sql": '''
 SELECT acct_district_id,
-       count(DISTINCT client_id1)
+       count(DISTINCT client_id1),
+       diffix.count_noise(DISTINCT client_id1)
 FROM accounts
 GROUP BY 1
 ORDER BY 1
@@ -1073,36 +1418,48 @@ SELECT acct_district_id,
 FROM accounts
 GROUP BY 1
 ORDER BY 1
-'''
+      '''
     }
   },
   {
-    "heading": "Proportional noise",
+    "heading": "Proportional",
     "description": '''
 <p class="desc">
-pg_diffix adds enough noise to hide the influence of individual users. When counting the number of distinct persons (or whatever the protected entity is), then each person contributes exactly one to the count, and so the amount noise is both small and predictable.
+This example gives the sum of all transaction amounts per client district. Since different clients contributes different amounts to the sums, the proportional noise varies from district to district, and is very large.
 <p class="desc">
-When counting the number of rows for time-series data, then some persons contribute more than others. The amount of noise inserted by pg_diffix increases to effectively hide heavy contributors.
-<p class="desc">
-In this query, noise levels are much higher; absolute error is easily plus or minus 1500. Relative error varies substantially from less than a percent to 10% or more.
+Note that the sums are conveyed as millions (and so is the absolute error), but the noise magnitude is not. (This is why the noise appears so high relative to the sum.)
 ''',
     "dbname": "banking0",
     "mode": "trusted",
     "diffix": {
       "sql": '''
-SELECT cli_district_id1, count(*)
-FROM transactions
-GROUP BY 1
+SELECT cdist,
+       round((sm/1000000)::numeric,2) 
+         AS sum_in_mil,
+         noise
+FROM (
+  SELECT cli_district_id1 AS cdist,
+        sum(amount) AS sm,
+        diffix.sum_noise(amount) AS noise
+  FROM transactions
+  GROUP BY 1
+) t
 ORDER BY 1
 '''
     },
     "native": {
       "sql": '''
-SELECT cli_district_id1, count(*)
-FROM transactions
-GROUP BY 1
+SELECT cdist,
+       round((sm/1000000)::numeric,2) 
+         AS sum_in_mil
+FROM (
+  SELECT cli_district_id1 AS cdist,
+        sum(amount) AS sm
+  FROM transactions
+  GROUP BY 1
+) t
 ORDER BY 1
-'''
+      '''
     }
   },
   {
@@ -1113,23 +1470,39 @@ Sometimes data has extreme contributors; one or a few individuals that contribut
 <p class="desc">
 While flattening hides extreme contributors, it has the unfortunate effect of adding a systematic negative bias to row counts (though not to counts of individuals).
 <p class="desc">
-Here is the same query from the proportional noise example. Looking at the "abs:rel" column, we see that the noise is not zero mean: it is negative far more often than positive. 
+Here is the same query from the proportional noise example with sums. Looking at the "abs:rel" column, we see that the distortion is not zero mean: it is negative far more often than positive. 
+<p class="desc">
+(Note that a future release is expected to reduce this bias by distributing some of the flattened value among the sums.)
 ''',
     "dbname": "banking0",
     "mode": "trusted",
     "diffix": {
       "sql": '''
-SELECT cli_district_id1, count(*)
-FROM transactions
-GROUP BY 1
+SELECT cdist,
+       round((sm/1000000)::numeric,2) 
+         AS sum_in_mil,
+         noise
+FROM (
+  SELECT cli_district_id1 AS cdist,
+        sum(amount) AS sm,
+        diffix.sum_noise(amount) AS noise
+  FROM transactions
+  GROUP BY 1
+) t
 ORDER BY 1
 '''
     },
     "native": {
       "sql": '''
-SELECT cli_district_id1, count(*)
-FROM transactions
-GROUP BY 1
+SELECT cdist,
+       round((sm/1000000)::numeric,2) 
+         AS sum_in_mil
+FROM (
+  SELECT cli_district_id1 AS cdist,
+        sum(amount) AS sm
+  FROM transactions
+  GROUP BY 1
+) t
 ORDER BY 1
 '''
     }
@@ -1147,6 +1520,8 @@ In the example below, the exact number of card types is displayed.
     "diffix": {
       "sql": '''
 SELECT count(DISTINCT card_type)
+       diffix.count_noise(
+           DISTINCT card_type)
 FROM cards
 '''
     },
@@ -1162,7 +1537,7 @@ FROM cards
     "heading": "-&nbsp&nbsp&nbspEquivalent Histogram",
     "description": '''
 <p class="desc">
-This is another way to count the number of distinct card types. Since no suppression takes place, an exact count is in any event allowed.
+This is another way to count the number of distinct card types. Since no suppression takes place, an exact count is in any event allowed. Adding noise to 'count(DISTINCT card_type)' would in any event not prevent the user from learning the exact distinct count. Note of course that learning the exact count when there is no suppression does not weaken anonymity.
 ''',
     "dbname": "banking0",
     "mode": "trusted",
@@ -1191,7 +1566,9 @@ When suppression would prevent viewing all column values, counting distinct valu
     "mode": "trusted",
     "diffix": {
       "sql": '''
-SELECT count(DISTINCT loan_date)
+SELECT count(DISTINCT loan_date),
+       diffix.count_noise(
+           DISTINCT loan_date)
 FROM loans
 '''
     },
@@ -1206,11 +1583,7 @@ FROM loans
     "heading": "Suppression",
     "description": '''
 <p class="desc">
-pg_diffix suppresses answers that pertain to too few individuals. The following set of example illustrate this anonymization mechanism.
-Read more 
-<a target=_blank href="
-https://www.open-diffix.org/blog/diffix-elm-automates-what-statistics-offices-have-been-doing-for-decades
-">here</a>.
+Part 1 contains two examples of suppression. We revisit that topic here to demonstrate how generalization can be used to reduce the amount of suppression.
 ''',
     "dbname": "",
     "mode": "trusted",
@@ -1222,113 +1595,76 @@ https://www.open-diffix.org/blog/diffix-elm-automates-what-statistics-offices-ha
     }
   },
   {
-    "heading": "Text",
+    "heading": "A lot of suppression",
     "description": '''
 <p class="desc">
-This example queries for the number of clients with each last name and displays them in descending order.
-<p class="desc">
-Simply adding noise to an answer is not enough to preserve anonymity. If there is only one user in the database with a given last name, then merely displaying this last name would single out that person and therefore be considered personal data by GDPR criteria.
-<p class="desc">
-The native answer here shows that there are over 3000 distinct last names in the database. pg_diffix, however, reveals only a fraction of these names: those that are shared by enough clients. The remaining names are hidden.
-<p class="desc">
-To inform the analyst that last names have been suppressed, and to give an indication of how much data has been suppressed, pg_diffix places all of the suppressed rows in a bucket labeled
-&nbsp<span style="font-family:'Courier New'">*</span>&nbsp
-and then displays the anonymized aggregate for that bucket.
-<p class="desc">
-For this query, essentially what happens is that all suppressed last names are replaced with the value
-&nbsp<span style="font-family:'Courier New'">*</span>&nbsp
-and then displayed as though
-&nbsp<span style="font-family:'Courier New'">*</span>&nbsp
-is a last name. From this we see that there are nearly 4000 clients whose last names have been suppressed.
-''',
-    "dbname": "banking0",
-    "mode": "trusted",
-    "diffix": {
-      "sql": '''
-SELECT lastname1,
-       count(DISTINCT client_id1)
-FROM accounts
-GROUP BY 1
-ORDER BY 2 DESC
-'''
-    },
-    "native": {
-      "sql": '''
-SELECT lastname1,
-       count(DISTINCT client_id1)
-FROM accounts
-GROUP BY 1
-ORDER BY 2 DESC
-'''
-    }
-  },
-  {
-    "heading": "Numbers",
-    "description": '''
-<p class="desc">
-This query similarly has substantial suppression, but this time displaying numbers instead of text.
-<p class="desc">
-In this case, rather than return
-&nbsp<span style="font-family:'Courier New'">*</span>&nbsp
-as the default symbol for identifying the suppression bucket, pg_diffix returns
-&nbsp<span style="font-family:'Courier New'">NULL</span>&nbsp
-(which here is displayed as 'None' because of the python implementation of this training program). pg_diffix can't return
-&nbsp<span style="font-family:'Courier New'">*</span>&nbsp
-for numbers because
-&nbsp<span style="font-family:'Courier New'">*</span>&nbsp
-is a string and therefore the wrong type.
-<p class="desc">
-Note however that NULL values may represent both suppressed data and true NULL entries in the data.
+This example measures the amount of suppression when exact pickup location (longitude and latitude) is queried. Over 98% of the data has been suppressed!
 ''',
     "dbname": "taxi",
     "mode": "trusted",
     "diffix": {
       "sql": '''
-SELECT pickup_latitude,
-       count(*)
-FROM jan08
-GROUP BY 1
-ORDER BY 2 DESC
+SELECT round(100*((count(*)-sum(status))/count(*)::numeric),2)
+         AS percent_suppressed
+FROM (
+  SELECT CASE
+        WHEN lat IS NULL
+             AND lon IS NULL
+        THEN 0
+        ELSE 1
+        END AS status
+  FROM (
+    SELECT pickup_latitude AS lat,
+           pickup_longitude AS lon
+    FROM jan08
+  ) t1
+) t2
 '''
     },
     "native": {
       "sql": '''
-SELECT pickup_latitude,
-       count(*)
+SELECT count(*)
 FROM jan08
-GROUP BY 1
-ORDER BY 2 DESC
+WHERE pickup_latitude IS NULL OR
+      pickup_longitude IS NULL
 '''
     }
   },
   {
-    "heading": "-&nbsp&nbsp&nbspSmarter query (generalization)",
+    "heading": "A little suppression",
     "description": '''
 <p class="desc">
-In cases where there is substantial suppression, the analyst may use generalization (in this case, the 'diffix.floor_by()' function) to avoid excessive suppression.
-<p class="desc">
-In the example below, the pg_diffix output does show a suppression bin (row labeled 'None'), but there are relatively few rows in this bin: very little of the data is being suppressed.
+This example shows how generalizing locations into roughly 100m boxes eliminates most suppression.
 ''',
     "dbname": "taxi",
     "mode": "trusted",
     "diffix": {
       "sql": '''
-SELECT diffix.floor_by(pickup_latitude,
-                   0.0001) AS latitude,
-       count(*)
-FROM jan08
-GROUP BY 1
-ORDER BY 2 DESC
+SELECT round(100*((count(*)-sum(status))/count(*)::numeric),2)
+         AS percent_suppressed
+FROM (
+  SELECT CASE
+        WHEN lat IS NULL
+             AND lon IS NULL
+        THEN 0
+        ELSE 1
+        END AS status
+  FROM (
+    SELECT diffix.floor_by(
+           pickup_latitude,0.001) AS lat,
+           diffix.floor_by(
+           pickup_longitude,0.001) AS lon
+    FROM jan08
+  ) t1
+) t2
 '''
     },
     "native": {
       "sql": '''
-SELECT floor(pickup_latitude*10000)/10000
-           AS latitude,
-       count(*)
+SELECT count(*)
 FROM jan08
-GROUP BY 1
-ORDER BY 2 DESC
+WHERE pickup_latitude IS NULL OR
+      pickup_longitude IS NULL
 '''
     }
   },
@@ -1639,118 +1975,16 @@ ORDER BY 1
     }
   },
   {
-    "heading": "More functions",
-    "description": '''
-<p class="desc">
-The SQL features that work with pg_diffix are powerful but limited. pg_diffix, however, does allow for post-processing with SQL through the use of nested queries. The inner query is anonymized (and has limited SQL), while the outer query has no SQL limitations. zzzz
-''',
-    "dbname": '',
-    "mode": "trusted",
-    "diffix": {
-      "sql": ''
-    },
-    "native": {
-      "sql": ''
-    }
-  },
-  {
-    "heading": "Max",
-    "description": '''
-<p class="desc">
-This query computes the maximum of all transaction amounts.
-<p class="desc">
-pg_diffix does not have a built-in max() function, but a maximum can be approximated by taking the highest value of a histogram that has little or no suppression.
-<p class="desc">
-This requires fine tuning: the analyst must discover the largest bucket size that nevertheless leads to little or not suppression, and then use that bucket size in the SQL expression shown here.
-<p class="desc">
-Note that often the max value is often unique to one individual, and so reporting a max would in any event constitute singling-out and be regarded as personal data by GDPR criteria.
-''',
-    "dbname": 'banking0',
-    "mode": "trusted",
-    "diffix": {
-      "sql": '''
-SELECT max(amount)
-FROM (
-  SELECT diffix.ceil_by(amount,1000)
-         AS amount,
-         count(*)
-  FROM transactions
-  GROUP BY 1
-) t
-      '''
-    },
-    "native": {
-      "sql": '''
-SELECT max(amount)
-FROM transactions
-      '''
-    }
-  },
-  {
-    "heading": "Min",
-    "description": '''
-<p class="desc">
-This query computes the minimum of all transaction amounts.
-<p class="desc">
-As with max, pg_diffix approximates the min() function by taking the lowest value of a histogram that has little or no suppression.
-''',
-    "dbname": 'banking0',
-    "mode": "trusted",
-    "diffix": {
-      "sql": '''
-SELECT min(amount)
-FROM (
-  SELECT diffix.floor_by(amount,1000)
-         AS amount,
-         count(*)
-  FROM transactions
-  GROUP BY 1
-) t
-      '''
-    },
-    "native": {
-      "sql": '''
-SELECT min(amount)
-FROM transactions
-      '''
-    }
-  },
-  {
-    "heading": "Median",
-    "description": '''
-<p class="desc">
-This query computes the median of all transaction amounts.
-<p class="desc">
-Here again, pg_diffix approximates median() using a histogram that has little or no suppression. Unlike the min() and max() examples, however, here the anonymizing query does not have an aggregate count and associated GROUP BY. When there is no GROUP BY, pg_diffix internally adds count(*), computes the corresponding buckets, and then outputs the number of rows corresponding to the noisy counts.
-<p class="desc">
-The resulting table can then be read diretly into PostgreSQL's PERCENTILE_CONT() function to estimate the median (or any other percentile).
-''',
-    "dbname": 'banking0',
-    "mode": "trusted",
-    "diffix": {
-      "sql": '''
-SELECT PERCENTILE_CONT(0.5) WITHIN 
-GROUP(ORDER BY amount)
-FROM (
-  SELECT diffix.round_by(amount,1000)
-         AS amount
-  FROM transactions
-) t
-      '''
-    },
-    "native": {
-      "sql": '''
-SELECT PERCENTILE_CONT(0.5) WITHIN 
-GROUP(ORDER BY amount)
-FROM transactions
-      '''
-    }
-  },
-  {
     "heading": "Custom generalization",
     "description": '''
 <p class="desc">
-zzzz
+Diffix Fir allows only rudimentary generalization: numeric ranges and substrings. It lacks any native datetime or geolocation capabilities. To deal with datetime, it is necessary to convert the datetime values to text and use substring. Geolocation can be generalized as latitude/longitude numbers.
+<p class="desc">
+Future versions of Diffix may deal with datetime or geolocation natively.
+<p class="desc">
+More generally, it can be useful to generalize through categorization: pizza, carbonara, and lasagne as italian food. Categorization can be supported in PostgreSQL with for instance CASE statements or IN, but pg_diffix does not support these operations.
+<p class="desc">
+At this point in time, it is necessary to pre-process data before querying with pg_diffix, for instance as a materalized view or simply a new table.
 ''',
     "dbname": "",
     "mode": "trusted",

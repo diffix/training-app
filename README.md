@@ -11,10 +11,12 @@ Add menu items to demoConfig.py.
 ### Environment Variables
 
 ### Mandatory
-* NATIVE_PASS (password for native postgres, no default)
-* CLOAK_PASS (password for cloak postgres, no default)
+There are no mandatory environment variables at this time.
 
 ### Optional
+* NATIVE_PASS (password for native postgres, defaults to 'demo')
+* TRUSTED_PASS (password for trusted user, defaults to 'demo')
+* UNTRUSTED_PASS (password for untrusted user, defaults to 'demo')
 * PORT (defaults to 8080)
 * DATA_DIR (holds the database 'training.db', defaults to '.')
 * LOG_DIR (holds the log file 'training.log', defaults to '.')
