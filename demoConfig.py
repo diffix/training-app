@@ -587,7 +587,11 @@ ORDER BY 1
     "heading": "<u>PART 2: ADVANCED</u>",
     "description": '''
     <p class="desc">
-zzzz
+    This part of the training application introduces and number of additional query features and shows how those features can be used to run a variety of PostgreSQL statistical operations.
+    <p class="desc">
+    This part also digs further into the effects of noise and suppression. Finally, it shows how a user can view a variety of Diffix configuration parameters, and describes other aspects of pg_diffix operation.
+    <p class="desc">
+    These examples complete the description of the features and limitations of pg_diffix.
     ''',
     "dbname": "",
     "mode": "trusted",
@@ -1519,7 +1523,7 @@ In the example below, the exact number of card types is displayed.
     "mode": "trusted",
     "diffix": {
       "sql": '''
-SELECT count(DISTINCT card_type)
+SELECT count(DISTINCT card_type),
        diffix.count_noise(
            DISTINCT card_type)
 FROM cards
@@ -1893,6 +1897,7 @@ ORDER BY 1
   },
   {
     "heading": "-&nbsp&nbsp&nbspFails for untrusted",
+    "expectErr": True,
     "description": '''
 <p class="desc">
 The same query fails in Untrusted Analyst mode.
@@ -1949,6 +1954,7 @@ ORDER BY 1
   },
   {
     "heading": "-&nbsp&nbsp&nbspFails for untrusted",
+    "expectErr": True,
     "description": '''
 <p class="desc">
 The same query fails in Untrusted Analyst mode.

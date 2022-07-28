@@ -784,9 +784,13 @@ def addExampleToCache(s,ex,sys):
     job = []
     s['dbname'] = ex['dbname']
     s['mode'] = ex['mode']
-    if len(ex[sys]['sql']) == 0:
+    if sys in ['trusted','untrusted']:
+        exSys = 'diffix'
+    else:
+        exSys = sys
+    if len(ex[exSys]['sql']) == 0:
         return html
-    sql = ex[sys]['sql']
+    sql = ex[exSys]['sql']
     html += f'''Check sql {sql}<br>'''
     key = makeKeyFromSql(sql)
     if entryIsInCache(sys,key):
