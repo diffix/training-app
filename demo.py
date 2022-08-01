@@ -223,6 +223,9 @@ def makeWelcomeHtml():
     <div class="par">
       <div class="par-left">
            <img src="logos.png" alt="" style="vertical-align:top">
+           <center>
+           <small><a href="https://imprint.mpi-klsb.mpg.de/sws/open-diffix.org/">imprint</a>&nbsp&nbsp&nbsp<a href="https://data-protection.mpi-klsb.mpg.de/sws/open-diffix.org/">privacy</a></small>
+           </center>
       </div>
       <div class="par-right">
           <font size="5">
@@ -495,6 +498,7 @@ def makeHtml():
            <font size="6" color="#0099cc"> 
            Training App
            </font>
+           <small><a href="https://imprint.mpi-klsb.mpg.de/sws/open-diffix.org/">imprint</a>&nbsp&nbsp&nbsp<a href="https://data-protection.mpi-klsb.mpg.de/sws/open-diffix.org/">privacy</a></small>
            </center>
            <div class="items-list">{s['exampleHtml']}</div>
       </div>
