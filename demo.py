@@ -488,6 +488,20 @@ def makeHtml():
       border-bottom: 1px solid #e60000;
       border-top: 1px solid #e60000;
     }}
+    #spinner {{
+      display: none;
+      margin: 6px auto;
+      border: 6px solid #f3f3f3;
+      border-top: 6px solid #3498db;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+    }}
+    @keyframes spin {{
+      0% {{ transform: rotate(0deg); }}
+      100% {{ transform: rotate(360deg); }}
+    }}
     </style>
 
     <br><br><br>
@@ -513,7 +527,8 @@ def makeHtml():
             Diffix SQL
             <span style="display:inline-block; width: {spaceWd}cm;"></span>
             Native SQL
-            <form action = "/run" method="POST"
+            <form action="/run" method="POST"
+              onsubmit="document.getElementById('spinner').style.display = 'block'"
               enctype="multipart/form-data">
               <textarea class="ta-diffix" name = "diffix"
                   wrap="hard">{s[diffixSys]['sql']}</textarea>
@@ -533,6 +548,7 @@ def makeHtml():
             </form>
         </div>
         <div class="par-right-answers">
+          <div id="spinner"></div>
           <div class="par-diffix">
               {s[diffixSys]['ansHtml']}
           </div>
