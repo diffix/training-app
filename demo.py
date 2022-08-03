@@ -252,6 +252,8 @@ def makeHtml():
     user = getCookie()
     s = loadUserState(user)
     diffixSys = s['mode']
+    if len(diffixSys) < 5:
+        diffixSys = 'trusted'
     if s['native']['colInfo'] is None:
         nativeTabWd = tabWid
     else:
@@ -600,6 +602,8 @@ def computeErrors():
     diffixSys = s['mode']
     # This routine assume that the last native column is the measure, and the
     # previous columns are the values
+    if len(diffixSys) < 5:
+        diffixSys = 'trusted'
     if s['native']['colInfo'] is None or s[diffixSys]['colInfo'] is None:
         return
     if s['native']['colInfo'][0] != s[diffixSys]['colInfo'][0]:
@@ -616,6 +620,8 @@ def computeErrors():
         key = ''
         for i in range(numValCols):
             key += str(row[i]) + ':::'
+        print(len(row))
+        print(measureIndex)
         if is_number(row[measureIndex]) is False:
             return
         diffixDict[key] = row[measureIndex]
@@ -1210,6 +1216,8 @@ def doRun():
     s['mode'] = str(request.POST.get('mode'))
     print(s['mode'])
     diffixSys = s['mode']
+    if len(diffixSys) < 5:
+        diffixSys = 'trusted'
     s[diffixSys]['ans'] = []
     s[diffixSys]['ansHtml'] = ''
     s[diffixSys]['cached'] = False
@@ -1224,6 +1232,8 @@ def doRun():
             sql = str(request.POST.get(sys))
         else:
             sql = str(request.POST.get('diffix'))
+            if len(sys) < 5:
+                sys = 'trusted'
         s[sys]['sql'] = sql
         if len(sql) > 0:
             jobs.append(gevent.spawn(doQuery,[sys,sql,s]))
