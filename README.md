@@ -25,7 +25,7 @@ There are no mandatory environment variables at this time.
 * NATIVE_HOST (defaults to db001.gda-score.org)
 * CLOAK_USER (user name for cloak postgres, defaults to 'training')
 * CLOAK_PORT (defaults to 9432)
-* CLOAK_HOST (defaults to attack.aircloak.com)
+* CLOAK_HOST (defaults to db001.gda-score.org)
 
 
 ### Populating the cache
